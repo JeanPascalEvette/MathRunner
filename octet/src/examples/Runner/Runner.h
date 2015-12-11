@@ -177,23 +177,11 @@ namespace octet {
 	{
 		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
 
-		image img = image("assets/pal.jpg");
-		GLuint tex = img.get_gl_texture();
-		glEnable(GL_TEXTURE_2D);
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
-		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-
-		vec2 center = vec2(0);
-		int iter = 100;
 
 
 		material *black = new material(vec4(0, 0, 0, 1), shader);
-		black->add_uniform(&tex, app_utils::get_atom("tex"), GL_SAMPLER_2D, 1, param::stage_fragment);
-		black->add_uniform(&center, app_utils::get_atom("c"), GL_FLOAT_VEC2, 1, param::stage_fragment);
-		black->add_uniform(&iter, app_utils::get_atom("iter"), GL_INT, 1, param::stage_fragment);
+		black->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment);
+		black->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
 
 
 
