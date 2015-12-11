@@ -26,8 +26,8 @@ void main() {
 	float oldRe = 0.0;
 	float oldIm = 0.0;   //real and imaginary parts of new and old
     float zoom = 1.0;
-	float moveX = 0.0;
-	float moveY = 0.0; //you can change these to zoom and change position
+	float moveX = 3.0;
+	float moveY = 3.0; //you can change these to zoom and change position
     int maxIterations = 300; //after how much iterations the function should stop
 
     //pick some values for the constant c, this determines the shape of the Julia Set
@@ -39,8 +39,8 @@ void main() {
 
 
 	//calculate the initial real and imaginary part of z, based on the pixel location and zoom and position values
-	newRe = 1.5 * (x - width / 2.0) / (0.5 * zoom * width) + moveX;
-	newIm = (y - height / 2.0) / (0.5 * zoom * height) + moveY;
+	newRe = 1.5 * (x) / (0.5 * zoom * width) + moveX;
+	newIm = (y) / (0.5 * zoom * height) + moveY;
 	//i will represent the number of iterations
 	int i;
 	//start the iteration process
@@ -56,15 +56,15 @@ void main() {
 		if((newRe * newRe + newIm * newIm) > 4.0) break;
 	}
 	//use color model conversion to get rainbow palette, make brightness black if maxIterations reached
-	float colorH = mod(float(i),256.0);
+	float colorH = mod(float(i), 256.0)/360.0;
 	float colorS = 255.0;
 	float colorV = 255.0;
 	if(i > maxIterations)
-	colorV *= 0.0;
+		colorV = 0.0;
 	vec3 colorHSV = vec3(colorH, colorS, colorV);
 	vec3 colorRGB = hsv2rgb(colorHSV);
 	//draw the pixel
-	gl_FragColor = vec4(colorRGB, 1.0);
+	gl_FragColor = vec4(colorRGB.xyz / 255.0, 1.0);
 
 }
 	
