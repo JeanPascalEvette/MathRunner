@@ -91,7 +91,7 @@ namespace octet {
 
 	  //mat.translate(0, 0, -backgroundDistance);
 	  //background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
-	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 400.0f);
+	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 450.0f);
 
 	  for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
 	  {
