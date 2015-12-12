@@ -24,14 +24,17 @@ void main() {
     //each iteration, it calculates: new = old*old + c, where c is a constant and old starts at current pixel
     float MinRe = -2.0;
 	float MaxRe = 1.0;
-	float MinIm = -1.2;
+	float MinIm = -1.5;
 	float MaxIm = MinIm+(MaxRe-MinRe) * height/width;
 	float Re_factor = (MaxRe-MinRe) / (width-1.0);
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
-	int MaxIterations = 30;
-
-	float c_im = MaxIm - y*Im_factor;
-	float c_re = MinRe + x*Re_factor;
+	int MaxIterations = 300;
+	
+	float zoom =  1.0;
+	float moveX = 0.0;
+	float moveY = 0.0;
+	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
+	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
 
 	float Z_re = c_re, Z_im = c_im;
 	bool isInside = true;
@@ -41,16 +44,13 @@ void main() {
 		float Z_re2 = Z_re*Z_re;
 		float Z_im2 = Z_im*Z_im;
 		if(Z_re2 + Z_im2 > 4.0)
-		{
-			isInside = false;
 			break;
-		}
 		Z_im = 2.0*Z_re*Z_im + c_im;
 		Z_re = Z_re2 - Z_im2 + c_re;
 	}
 	if(n < MaxIterations) 
 	{ 
-		gl_FragColor = vec4(float(n)/float(MaxIterations),0.0,0.0, 1.0);
+		gl_FragColor = vec4(0.0,0.0,float(n)/float(MaxIterations), 1.0);
 	}
 	else
 	{
