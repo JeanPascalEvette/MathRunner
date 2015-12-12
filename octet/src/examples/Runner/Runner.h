@@ -47,6 +47,9 @@ namespace octet {
 	int playerSize;
 	int backgroundDistance;
 	int lastDist;
+	struct my_vertex {
+		vec3p pos;
+	};
 
   public:
     /// this is called when we construct the class before everything is initialised.
@@ -86,8 +89,9 @@ namespace octet {
 	  mat.translate(0, 2, 0);
 	  player = createGameObject(mat, new mesh_box(vec3(playerSize)), purple, true, 10.0f);
 
-	  mat.translate(0, 0, -backgroundDistance);
-	  background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
+	  //mat.translate(0, 0, -backgroundDistance);
+	  //background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
+	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 450.0f);
 
 	  for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
 	  {
@@ -169,6 +173,71 @@ namespace octet {
 		background.getNode()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
 	}
 
+	void drawBackground(const vec3 &position, const float &size)
+	{
+		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
+
+
+
+		material *black = new material(vec4(0, 0, 0, 1), shader);
+		black->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment);
+		black->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
+
+
+
+		mesh *bg = new mesh();
+
+
+		size_t num_vertices = 4;
+		size_t num_indices = 6;
+		bg->allocate(sizeof(my_vertex) * num_vertices, sizeof(uint32_t) * num_indices);
+		bg->set_params(sizeof(my_vertex), num_indices, num_vertices, GL_TRIANGLES, GL_UNSIGNED_INT);
+
+		// describe the structure of my_vertex to OpenGL
+		bg->add_attribute(attribute_pos, 3, GL_FLOAT, 0);
+
+
+		{
+			// these write-only locks give access to the vertices and indices.
+			// they will be released at the next } (the end of the scope)
+			gl_resource::wolock vl(bg->get_vertices());
+			my_vertex *vtx = (my_vertex *)vl.u8();
+			gl_resource::wolock il(bg->get_indices());
+			uint32_t *idx = il.u32();
+
+			vtx->pos = vec3p(-size / 2, size / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(-size/2, -size / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(size / 2, size / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(size / 2, -size / 2, 0);
+			// make the triangles
+			uint32_t vn = 0;
+				// 0--2
+				// | \|
+				// 1--3
+			idx[0] = 0;
+			idx[1] = 1;
+			idx[2] = 3;
+			idx[3] = 0;
+			idx[4] = 3;
+			idx[5] = 2;
+		}
+
+
+		//Add the hole to the app_scene
+		scene_node *node = new scene_node();
+		app_scene->add_child(node);
+		app_scene->add_mesh_instance(new mesh_instance(node, bg, black));
+
+		//Move the hole to the required location, then add it to the list of holes.
+		node->translate(position);
+
+		background = GameObject(node, nullptr, nullptr);
+
+	}
+
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) {
       int vx = 0, vy = 0;
@@ -188,6 +257,8 @@ namespace octet {
 	  }
 
 	  std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
+
+
 
       // draw the scene
       app_scene->render((float)vx / vy);
