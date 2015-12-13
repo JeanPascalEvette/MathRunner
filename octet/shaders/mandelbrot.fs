@@ -16,9 +16,11 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
+//vec3 myRgbVec =  hsv2rgb(myHSVVec); this is to pass the value to the HSV to RGB function
+
 void main() { 
 
-	float x = model_pos_.x + width/2.0;  //xyz position of my square. Position relative to the middle of the section
+	float x = model_pos_.x + width/2.0;  // xyz position of my square. Position relative to the middle of the section
 	float y = model_pos_.y + height/2.0; // off set to put everything on 0,0
 
     //each iteration, it calculates: new = old*old + c, where c is a constant and old starts at current pixel
@@ -30,9 +32,9 @@ void main() {
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
 	int MaxIterations = 300;
 	
-	float zoom =  1.0;
+	float zoom =  15.0;
 	float moveX = 0.0;
-	float moveY = 0.0;
+	float moveY = 10.0;
 	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
 
@@ -50,10 +52,10 @@ void main() {
 	}
 	if(n < MaxIterations) 
 	{ 
-		gl_FragColor = vec4(0.0,0.0,float(n)/float(MaxIterations), 1.0);
+		gl_FragColor = vec4(float(n)/float(MaxIterations),float(n)/float(MaxIterations),float(n)/float(MaxIterations), 1.0);
 	}
 	else
-	{
+	{ 
 		gl_FragColor = vec4(0.0,0.0,0.0, 1.0);
 	}
 
