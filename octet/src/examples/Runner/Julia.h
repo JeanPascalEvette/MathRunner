@@ -1,4 +1,4 @@
-namespace octet {
+namespace octet { // not used
 	namespace shaders {
 		class Julia_shader : public shader {
 			GLuint modelToProjectionIndex_;

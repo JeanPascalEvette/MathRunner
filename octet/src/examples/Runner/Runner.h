@@ -179,16 +179,16 @@ namespace octet {
 
 
 
-		material *black = new material(vec4(0, 0, 0, 1), shader);
-		black->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment);
+		material *black = new material(vec4(0, 0, 0, 1), shader); //to attach the material to
+		black->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
 		black->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
 
 
 
-		mesh *bg = new mesh();
+		mesh *bg = new mesh(); // attach properties, octet stuff
 
 
-		size_t num_vertices = 4;
+		size_t num_vertices = 4; // creting four vertices for the 2 triangles creating the rectangle
 		size_t num_indices = 6;
 		bg->allocate(sizeof(my_vertex) * num_vertices, sizeof(uint32_t) * num_indices);
 		bg->set_params(sizeof(my_vertex), num_indices, num_vertices, GL_TRIANGLES, GL_UNSIGNED_INT);

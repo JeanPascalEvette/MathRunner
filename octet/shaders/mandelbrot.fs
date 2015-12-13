@@ -18,8 +18,8 @@ vec3 hsv2rgb(vec3 c)
 
 void main() { 
 
-	float x = model_pos_.x + width/2.0;
-	float y = model_pos_.y + height/2.0;
+	float x = model_pos_.x + width/2.0;  //xyz position of my square. Position relative to the middle of the section
+	float y = model_pos_.y + height/2.0; // off set to put everything on 0,0
 
     //each iteration, it calculates: new = old*old + c, where c is a constant and old starts at current pixel
     float MinRe = -2.0;
