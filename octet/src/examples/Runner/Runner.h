@@ -33,12 +33,37 @@ namespace octet {
 		btRigidBody* _rigidBody;
 		ref<mesh_instance> _meshInstance;
 	};
+
+	class Background {
+	public:
+		Background() {}
+		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY) 
+		{
+			_node = node;
+			_mat = mat;
+			_zoom = zoom;
+			_moveX = moveX;
+			_moveY = moveY;
+		}
+
+		ref<param_uniform> moveX() { return _moveX; }
+		ref<param_uniform> moveY() { return _moveY; }
+		ref<param_uniform> zoom() { return _zoom; }
+		ref<material> mat() { return _mat; }
+		ref<scene_node> node() { return _node; }
+	private:
+		ref<material> _mat;
+		ref<param_uniform> _zoom;
+		ref<param_uniform> _moveX;
+		ref<param_uniform> _moveY;
+		ref<scene_node> _node;
+	};
     // scene for drawing box
 	
     ref<visual_scene> app_scene;
+	Background background;
 	bool freeCamera;
 	GameObject player;
-	GameObject background;
 	std::vector<GameObject> listGameObjects;
 
 	int obstacleDrawDistance;
@@ -46,6 +71,9 @@ namespace octet {
 	int roadWidth;
 	int playerSize;
 	int backgroundDistance;
+	float backgroundZoom;
+	float backgroundMoveX;
+	float backgroundMoveY;
 	int lastDist;
 	struct my_vertex {
 		vec3p pos;
@@ -70,10 +98,15 @@ namespace octet {
 	  obstacleDrawDistance = 450;
 	  obstacleGap = 50;
 	  backgroundDistance = 500;
+	  background = Background();
 	  roadWidth = 5;
 	  playerSize = 1;
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
+
+	  backgroundZoom = 15.0f;
+	  backgroundMoveX = 0.0f;
+	  backgroundMoveY = 10.0f;
 
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -163,14 +196,58 @@ namespace octet {
 			movement -= 0.5f;
 		if (is_key_down(key_right))
 			movement += 0.5f;
+
+		float changeSpeed = 0.5f;
+		if (backgroundZoom > 100.0f)
+			changeSpeed /= (backgroundZoom / 100);
+		if (is_key_down(65))
+			backgroundMoveX -= changeSpeed;
+		if (is_key_down(68))
+			backgroundMoveX += changeSpeed;
+		if (is_key_down(87))
+			backgroundMoveY -= changeSpeed;
+		if (is_key_down(83))
+			backgroundMoveY += changeSpeed;
+		if (is_key_down(81))
+		{
+			int iterations = 1;
+			if (backgroundZoom > 100.0f)
+				iterations += backgroundZoom/100;
+			for (int i = 0; i < iterations; i ++)
+			{
+				backgroundZoom -= changeSpeed;
+				backgroundMoveY -= 0.33f;
+				backgroundMoveX += 0.01f;
+			}
+		}
+		if (is_key_down(69))
+		{
+			int iterations = 1;
+			if (backgroundZoom > 100.0f)
+				iterations += backgroundZoom / 100;
+			for (int i = 0; i < iterations; i++)
+			{
+				backgroundZoom += changeSpeed;
+				backgroundMoveY += 0.33f;
+				backgroundMoveX -= 0.01f;
+			}
+		}
 		float newX = abs(player.getNode()->get_position().x() + movement);
 		if (newX < roadWidth - playerSize)
 		{
 			player.getNode()->translate(vec3(movement, 0, 0));
 		}
+		if (background.node() == nullptr)
+			return;
 
-		background.getNode()->translate(-background.getNode()->get_position());
-		background.getNode()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
+
+		background.node()->translate(-background.node()->get_position());
+		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
+		
+		
+		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
+		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
+		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
 	}
 
 	void drawBackground(const vec3 &position, const float &size)
@@ -179,9 +256,12 @@ namespace octet {
 
 
 
-		material *black = new material(vec4(0, 0, 0, 1), shader); //to attach the material to
-		black->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
-		black->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
+		material* backgroundMaterial = new material(vec4(0, 0, 0, 1), shader); //to attach the material to
+		backgroundMaterial->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
+		backgroundMaterial->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
+		param_uniform* paramZoom = backgroundMaterial->add_uniform(&backgroundZoom, app_utils::get_atom("zoom"), GL_FLOAT, 1, param::stage_fragment);
+		param_uniform* paramMoveX = backgroundMaterial->add_uniform(&backgroundMoveX, app_utils::get_atom("moveX"), GL_FLOAT, 1, param::stage_fragment);
+		param_uniform* paramMoveY = backgroundMaterial->add_uniform(&backgroundMoveY, app_utils::get_atom("moveY"), GL_FLOAT, 1, param::stage_fragment);
 
 
 
@@ -204,7 +284,7 @@ namespace octet {
 			my_vertex *vtx = (my_vertex *)vl.u8();
 			gl_resource::wolock il(bg->get_indices());
 			uint32_t *idx = il.u32();
-
+			
 			vtx->pos = vec3p(-size / 2, size / 2, 0);
 			vtx++;
 			vtx->pos = vec3p(-size/2, -size / 2, 0);
@@ -229,12 +309,12 @@ namespace octet {
 		//Add the hole to the app_scene
 		scene_node *node = new scene_node();
 		app_scene->add_child(node);
-		app_scene->add_mesh_instance(new mesh_instance(node, bg, black));
+		app_scene->add_mesh_instance(new mesh_instance(node, bg, backgroundMaterial));
 
 		//Move the hole to the required location, then add it to the list of holes.
 		node->translate(position);
 
-		background = GameObject(node, nullptr, nullptr);
+		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY);
 
 	}
 
@@ -256,7 +336,8 @@ namespace octet {
 		  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
 	  }
 
-	  std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
+	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
+	  std::cout << "MoveX : " << backgroundMoveX << "\nMoveY : " << backgroundMoveY << "\nZoom : " << backgroundZoom << "\n";
 
 
 

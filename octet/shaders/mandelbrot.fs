@@ -8,6 +8,9 @@
 varying vec3 model_pos_;
 uniform float width;
 uniform float height;
+uniform float zoom;
+uniform float moveX;
+uniform float moveY;
 		
 vec3 hsv2rgb(vec3 c)
 {
@@ -30,9 +33,6 @@ void main() {
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
 	int MaxIterations = 300;
 	
-	float zoom =  1.0;
-	float moveX = 0.0;
-	float moveY = 0.0;
 	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
 
