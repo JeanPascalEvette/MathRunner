@@ -11,6 +11,7 @@ uniform float height;
 uniform float zoom;
 uniform float moveX;
 uniform float moveY;
+uniform int divisor;
 		
 vec3 hsv2rgb(vec3 c)
 {
@@ -56,8 +57,12 @@ void main() {
 	if(n < MaxIterations) 
 	{ 
     //color = HSVtoRGB(ColorHSV(i % 256, 255, 255 * (i < MaxIterations)));
+	
+	vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
 
-	vec3 myHSVVec = vec3((float(n)/256.0), 0.99, 0.99);
+	//Alternative Palette
+	//vec3 myHSVVec = vec3((float(n)/float(MaxIterations))*20.0, 0.99, 0.99);
+
 	vec3 myRgbVec =  hsv2rgb(myHSVVec);
 
 	gl_FragColor = vec4(myRgbVec, 1.0);
@@ -67,6 +72,7 @@ void main() {
 
 	}
 	else
+
 	{ 
 		gl_FragColor = vec4(0.0,0.0,0.0, 1.0);
 	}
