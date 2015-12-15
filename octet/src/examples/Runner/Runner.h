@@ -108,7 +108,7 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 1.0f;
+	  backgroundZoom = 0.8f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  divisor_change = 20;
