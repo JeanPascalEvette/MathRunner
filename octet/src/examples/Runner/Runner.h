@@ -111,7 +111,7 @@ namespace octet {
 	  backgroundZoom = 1.0f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
-	  divisor_change = 256;
+	  divisor_change = 20;
 
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -245,6 +245,17 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+		int max_divisor = 500;
+		if (is_key_down(key_alt) && divisor_change<= max_divisor)
+		{
+			divisor_change += 1;
+		}
+
+		if (is_key_down(key_backspace) && divisor_change > 1)
+		{
+			divisor_change -= 1;
+		}
+
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
@@ -253,6 +264,7 @@ namespace octet {
 		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
 		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
 		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
+		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
 	}
 
 	void drawBackground(const vec3 &position, const float &size)
