@@ -104,9 +104,9 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 15.0f;
+	  backgroundZoom = 1.0f;
 	  backgroundMoveX = 0.0f;
-	  backgroundMoveY = 10.0f;
+	  backgroundMoveY = 0.0f;
 
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -124,7 +124,9 @@ namespace octet {
 
 	  //mat.translate(0, 0, -backgroundDistance);
 	  //background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
-	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 450.0f);
+      int vx = 0, vy = 0;
+	  get_viewport_size(vx, vy);
+	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), vx, vy);
 
 	  for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
 	  {
@@ -197,40 +199,23 @@ namespace octet {
 		if (is_key_down(key_right))
 			movement += 0.5f;
 
-		float changeSpeed = 0.5f;
-		if (backgroundZoom > 100.0f)
-			changeSpeed /= (backgroundZoom / 100);
+		float moveSpeed = 0.1f / backgroundZoom;
+		float zoomSpeed = 0.5f * backgroundZoom / 3;
 		if (is_key_down(65))
-			backgroundMoveX -= changeSpeed;
+			backgroundMoveX -= moveSpeed;
 		if (is_key_down(68))
-			backgroundMoveX += changeSpeed;
+			backgroundMoveX += moveSpeed;
 		if (is_key_down(87))
-			backgroundMoveY -= changeSpeed;
+			backgroundMoveY -= moveSpeed;
 		if (is_key_down(83))
-			backgroundMoveY += changeSpeed;
-		if (is_key_down(81))
+			backgroundMoveY += moveSpeed;
+		if (is_key_down(81) && backgroundZoom > 1.0f)
 		{
-			int iterations = 1;
-			if (backgroundZoom > 100.0f)
-				iterations += backgroundZoom/100;
-			for (int i = 0; i < iterations; i ++)
-			{
-				backgroundZoom -= changeSpeed;
-				backgroundMoveY -= 0.33f;
-				backgroundMoveX += 0.01f;
-			}
+			backgroundZoom -= (zoomSpeed);
 		}
 		if (is_key_down(69))
 		{
-			int iterations = 1;
-			if (backgroundZoom > 100.0f)
-				iterations += backgroundZoom / 100;
-			for (int i = 0; i < iterations; i++)
-			{
-				backgroundZoom += changeSpeed;
-				backgroundMoveY += 0.33f;
-				backgroundMoveX -= 0.01f;
-			}
+			backgroundZoom += (zoomSpeed);
 		}
 		float newX = abs(player.getNode()->get_position().x() + movement);
 		if (newX < roadWidth - playerSize)
@@ -250,15 +235,15 @@ namespace octet {
 		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
 	}
 
-	void drawBackground(const vec3 &position, const float &size)
+	void drawBackground(const vec3 &position, const float &width, const float &height)
 	{
 		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
 
 
 
 		material* backgroundMaterial = new material(vec4(0, 0, 0, 1), shader); //to attach the material to
-		backgroundMaterial->add_uniform(&size, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
-		backgroundMaterial->add_uniform(&size, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
+		backgroundMaterial->add_uniform(&width, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
+		backgroundMaterial->add_uniform(&height, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramZoom = backgroundMaterial->add_uniform(&backgroundZoom, app_utils::get_atom("zoom"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramMoveX = backgroundMaterial->add_uniform(&backgroundMoveX, app_utils::get_atom("moveX"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramMoveY = backgroundMaterial->add_uniform(&backgroundMoveY, app_utils::get_atom("moveY"), GL_FLOAT, 1, param::stage_fragment);
@@ -285,13 +270,13 @@ namespace octet {
 			gl_resource::wolock il(bg->get_indices());
 			uint32_t *idx = il.u32();
 			
-			vtx->pos = vec3p(-size / 2, size / 2, 0);
+			vtx->pos = vec3p(-width / 2, height / 2, 0);
 			vtx++;
-			vtx->pos = vec3p(-size/2, -size / 2, 0);
+			vtx->pos = vec3p(-width /2, -height / 2, 0);
 			vtx++;
-			vtx->pos = vec3p(size / 2, size / 2, 0);
+			vtx->pos = vec3p(width / 2, height / 2, 0);
 			vtx++;
-			vtx->pos = vec3p(size / 2, -size / 2, 0);
+			vtx->pos = vec3p(width / 2, -height / 2, 0);
 			// make the triangles
 			uint32_t vn = 0;
 				// 0--2
@@ -319,7 +304,7 @@ namespace octet {
 	}
 
     /// this is called to draw the world
-    void draw_world(int x, int y, int w, int h) {
+    void draw_world(int x, int y, int w, int h) { 
       int vx = 0, vy = 0;
       get_viewport_size(vx, vy);
       app_scene->begin_render(vx, vy);
