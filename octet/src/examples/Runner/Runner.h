@@ -268,7 +268,7 @@ namespace octet {
 		mesh *bg = new mesh(); // attach properties, octet stuff
 
 
-		size_t num_vertices = 4; // creting four vertices for the 2 triangles creating the rectangle
+		size_t num_vertices = 4; // creating four vertices for the 2 triangles creating the rectangle
 		size_t num_indices = 6;
 		bg->allocate(sizeof(my_vertex) * num_vertices, sizeof(uint32_t) * num_indices);
 		bg->set_params(sizeof(my_vertex), num_indices, num_vertices, GL_TRIANGLES, GL_UNSIGNED_INT);
