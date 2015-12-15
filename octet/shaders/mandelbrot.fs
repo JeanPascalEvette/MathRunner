@@ -11,6 +11,7 @@ uniform float height;
 uniform float zoom;
 uniform float moveX;
 uniform float moveY;
+uniform int divisor;
 		
 vec3 hsv2rgb(vec3 c)
 {
@@ -56,8 +57,8 @@ void main() {
 	if(n < MaxIterations) 
 	{ 
     //color = HSVtoRGB(ColorHSV(i % 256, 255, 255 * (i < MaxIterations)));
-
-	vec3 myHSVVec = vec3((float(n)/20), 0.99, 0.99);
+	
+	vec3 myHSVVec = vec3((float(n)/divisor), 0.99, 0.99);
 
 	//Alternative Palette
 	//vec3 myHSVVec = vec3((float(n)/float(MaxIterations))*20.0, 0.99, 0.99);

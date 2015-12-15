@@ -37,17 +37,19 @@ namespace octet {
 	class Background {
 	public:
 		Background() {}
-		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY) 
+		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY, ref<param_uniform> ChangeDiv)
 		{
 			_node = node;
 			_mat = mat;
 			_zoom = zoom;
 			_moveX = moveX;
 			_moveY = moveY;
+			_ChangeDiv = ChangeDiv;
 		}
 
 		ref<param_uniform> moveX() { return _moveX; }
 		ref<param_uniform> moveY() { return _moveY; }
+		ref<param_uniform> ChangeDiv() { return _ChangeDiv; }
 		ref<param_uniform> zoom() { return _zoom; }
 		ref<material> mat() { return _mat; }
 		ref<scene_node> node() { return _node; }
@@ -56,6 +58,7 @@ namespace octet {
 		ref<param_uniform> _zoom;
 		ref<param_uniform> _moveX;
 		ref<param_uniform> _moveY;
+		ref<param_uniform> _ChangeDiv;
 		ref<scene_node> _node;
 	};
     // scene for drawing box
@@ -74,6 +77,7 @@ namespace octet {
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
+	int divisor_change;
 	int lastDist;
 	struct my_vertex {
 		vec3p pos;
@@ -107,6 +111,7 @@ namespace octet {
 	  backgroundZoom = 1.0f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
+	  divisor_change = 256;
 
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -262,7 +267,7 @@ namespace octet {
 		param_uniform* paramZoom = backgroundMaterial->add_uniform(&backgroundZoom, app_utils::get_atom("zoom"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramMoveX = backgroundMaterial->add_uniform(&backgroundMoveX, app_utils::get_atom("moveX"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramMoveY = backgroundMaterial->add_uniform(&backgroundMoveY, app_utils::get_atom("moveY"), GL_FLOAT, 1, param::stage_fragment);
-
+		param_uniform* paramChange_div = backgroundMaterial->add_uniform(&divisor_change, app_utils::get_atom("divisor"), GL_INT, 1, param::stage_fragment);
 
 
 		mesh *bg = new mesh(); // attach properties, octet stuff
@@ -314,7 +319,7 @@ namespace octet {
 		//Move the hole to the required location, then add it to the list of holes.
 		node->translate(position);
 
-		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY);
+		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div);
 
 	}
 
