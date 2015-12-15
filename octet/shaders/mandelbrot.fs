@@ -34,7 +34,7 @@ void main() {
 	
 	float zoom =  15.0;
 	float moveX = 0.0;
-	float moveY = 10.0;
+	float moveY = -10.0;
 	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
 
@@ -49,15 +49,28 @@ void main() {
 			break;
 		Z_im = 2.0*Z_re*Z_im + c_im;
 		Z_re = Z_re2 - Z_im2 + c_re;
+
+		
 	}
+
 	if(n < MaxIterations) 
 	{ 
-		gl_FragColor = vec4(float(n)/float(MaxIterations),float(n)/float(MaxIterations),float(n)/float(MaxIterations), 1.0);
+    //color = HSVtoRGB(ColorHSV(i % 256, 255, 255 * (i < MaxIterations)));
+
+	vec3 myHSVVec = vec3((float(n)/256.0), 255.0, 255.0);
+	vec3 myRgbVec =  hsv2rgb(myHSVVec);
+
+	gl_FragColor = vec4(myRgbVec, 1.0);
+
+	//gl_FragColor = vec4(float(n)/float(MaxIterations),float(n)/float(MaxIterations),float(n)/float(MaxIterations), 1.0);
+	
+
 	}
 	else
 	{ 
 		gl_FragColor = vec4(0.0,0.0,0.0, 1.0);
 	}
+	
 
 }
 	
