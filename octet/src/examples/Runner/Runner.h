@@ -104,9 +104,9 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 15.0f;
+	  backgroundZoom = 1.0f;
 	  backgroundMoveX = 0.0f;
-	  backgroundMoveY = 10.0f;
+	  backgroundMoveY = 0.0f;
 
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
