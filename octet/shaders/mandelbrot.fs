@@ -32,9 +32,9 @@ void main() {
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
 	int MaxIterations = 300;
 	
-	float zoom =  15.0;
+	float zoom =  1.0;
 	float moveX = 0.0;
-	float moveY = -10.0;
+	float moveY = 0.0;
 	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
 
@@ -57,7 +57,7 @@ void main() {
 	{ 
     //color = HSVtoRGB(ColorHSV(i % 256, 255, 255 * (i < MaxIterations)));
 
-	vec3 myHSVVec = vec3((float(n)/256.0), 255.0, 255.0);
+	vec3 myHSVVec = vec3((float(n)/256.0), 0.99, 0.99);
 	vec3 myRgbVec =  hsv2rgb(myHSVVec);
 
 	gl_FragColor = vec4(myRgbVec, 1.0);
