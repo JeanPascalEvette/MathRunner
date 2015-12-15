@@ -245,8 +245,9 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+		//Code added to change color palette of Mandelbrot
 		int max_divisor = 500;
-		if (is_key_down(key_alt) && divisor_change<= max_divisor)
+		if (is_key_down(key_alt) && divisor_change <= max_divisor)
 		{
 			divisor_change += 1;
 		}
