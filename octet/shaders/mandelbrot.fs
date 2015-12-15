@@ -35,8 +35,8 @@ void main() {
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
 	int MaxIterations = 300;
 	
-	float c_im = (MaxIm - y*Im_factor + moveY) * (1.0/zoom);
-	float c_re = (MinRe + x*Re_factor + moveX) * (1.0/zoom);
+	float c_im = (MaxIm - y*Im_factor + moveY*zoom) * (1.0/zoom);
+	float c_re = (MinRe + x*Re_factor + moveX*zoom) * (1.0/zoom);
 
 	float Z_re = c_re, Z_im = c_im;
 	bool isInside = true;
