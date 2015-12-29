@@ -218,10 +218,12 @@ namespace octet {
 			time_t cumul = 0;
 			for (int i = 0; i < path.size(); i++)
 			{
+				if (i == 2)
+					int u = 0;
 				cumul += path[i].second;
 				if (currentTime < cumul)
 				{
-					float factor = (float(currentTime) / float(cumul));
+					float factor = (float(currentTime - (cumul - path[i].second)) / float(path[i].second));
 					backgroundMoveX = (path[i - 1].first.x() + (path[i].first.x() - path[i - 1].first.x()) * factor);
 					backgroundMoveY = (path[i - 1].first.y() + (path[i].first.y() - path[i - 1].first.y()) * factor);
 					backgroundZoom  = (path[i - 1].first.z() + (path[i].first.z() - path[i - 1].first.z()) * factor);
@@ -370,7 +372,7 @@ namespace octet {
 	  }
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
-	  std::cout << "MoveX : " << backgroundMoveX << "\nMoveY : " << backgroundMoveY << "\nZoom : " << backgroundZoom << "\n";
+	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
 
 
 
