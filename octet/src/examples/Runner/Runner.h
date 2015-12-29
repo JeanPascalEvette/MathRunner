@@ -144,6 +144,7 @@ namespace octet {
 
 	  path = std::vector<std::pair<vec3, time_t>>();
 	  path.push_back(std::pair<vec3, time_t>(vec3(backgroundMoveX, backgroundMoveY, backgroundZoom), 0));
+	  path.push_back(std::pair<vec3, time_t>(vec3(-0.6f, -0.0f, 1.5f), 3000));
 	  path.push_back(std::pair<vec3, time_t>(vec3(-0.7f, -0.15f, 13.75f), 10000));
 
 
@@ -220,9 +221,10 @@ namespace octet {
 				cumul += path[i].second;
 				if (currentTime < cumul)
 				{
-					backgroundMoveX = (path[i].first.x() + path[i - 1].first.x()) * (float(currentTime) / float(cumul));
-					backgroundMoveY = (path[i].first.y() + path[i - 1].first.y()) * (float(currentTime) / float(cumul));
-					backgroundZoom  = (path[i].first.z() + path[i - 1].first.z()) * (float(currentTime) / float(cumul));
+					float factor = (float(currentTime) / float(cumul));
+					backgroundMoveX = (path[i - 1].first.x() + (path[i].first.x() - path[i - 1].first.x()) * factor);
+					backgroundMoveY = (path[i - 1].first.y() + (path[i].first.y() - path[i - 1].first.y()) * factor);
+					backgroundZoom  = (path[i - 1].first.z() + (path[i].first.z() - path[i - 1].first.z()) * factor);
 					break;
 				}
 			}
