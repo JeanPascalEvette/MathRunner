@@ -141,8 +141,11 @@ namespace octet {
 		  createObstacle((i+1) * obstacleGap, new mesh_sphere(vec3(0), 1), blue);
 	  }
 
-
-	  path = std::vector<std::pair<vec3, time_t>>();
+	  //This is used to generate a path for the Mandlebrot's camera
+	  //Format : 
+	  // pair( vec3(MoveX, MoveY, Zoom), time (in ms) )
+	  //Can add any number of entries > 1. Please note that the time is cumulative (i.e if the first one is 3000, and the second one 10000 the second one will trigger 13sec after start of run)
+	  path = std::vector<std::pair<vec3, time_t>>(); 
 	  path.push_back(std::pair<vec3, time_t>(vec3(backgroundMoveX, backgroundMoveY, backgroundZoom), 0));
 	  path.push_back(std::pair<vec3, time_t>(vec3(-0.6f, -0.0f, 1.5f), 3000));
 	  path.push_back(std::pair<vec3, time_t>(vec3(-0.7f, -0.15f, 13.75f), 10000));
@@ -212,18 +215,20 @@ namespace octet {
 		if (is_key_down(key_right))
 			movement += 0.5f;
 
+		
 		if (isBackgroundAuto && path.size() > 1)
 		{
 			time_t currentTime = clock();
 			time_t cumul = 0;
 			for (int i = 0; i < path.size(); i++)
 			{
-				if (i == 2)
-					int u = 0;
 				cumul += path[i].second;
 				if (currentTime < cumul)
 				{
+					//The factor calculates how much of the current path has already been traveled
 					float factor = (float(currentTime - (cumul - path[i].second)) / float(path[i].second));
+
+					//Then the factor is applied to each property
 					backgroundMoveX = (path[i - 1].first.x() + (path[i].first.x() - path[i - 1].first.x()) * factor);
 					backgroundMoveY = (path[i - 1].first.y() + (path[i].first.y() - path[i - 1].first.y()) * factor);
 					backgroundZoom  = (path[i - 1].first.z() + (path[i].first.z() - path[i - 1].first.z()) * factor);
@@ -231,7 +236,7 @@ namespace octet {
 				}
 			}
 		}
-		else
+		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
 			float moveSpeed = 0.1f / backgroundZoom;
 			float zoomSpeed = 0.5f * backgroundZoom / 3;
