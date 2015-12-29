@@ -66,8 +66,10 @@ namespace octet {
     ref<visual_scene> app_scene;
 	Background background;
 	bool freeCamera;
+	bool isBackgroundAuto;
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
+	std::vector<std::pair<vec3, time_t>> path;
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -96,6 +98,7 @@ namespace octet {
 	  julia_shader_.init();
 
 	  freeCamera = false;
+	  isBackgroundAuto = true;
       app_scene =  new visual_scene();
       app_scene->create_default_camera_and_lights();
 	  app_scene->get_camera_instance(0)->set_far_plane(1000.0f);
@@ -138,6 +141,10 @@ namespace octet {
 		  createObstacle((i+1) * obstacleGap, new mesh_sphere(vec3(0), 1), blue);
 	  }
 
+
+	  path = std::vector<std::pair<vec3, time_t>>();
+	  path.push_back(std::pair<vec3, time_t>(vec3(backgroundMoveX, backgroundMoveY, backgroundZoom), 0));
+	  path.push_back(std::pair<vec3, time_t>(vec3(-0.7f, -0.15f, 13.75f), 10000));
 
 
     }
@@ -204,24 +211,45 @@ namespace octet {
 		if (is_key_down(key_right))
 			movement += 0.5f;
 
-		float moveSpeed = 0.1f / backgroundZoom;
-		float zoomSpeed = 0.5f * backgroundZoom / 3;
-		if (is_key_down(65))
-			backgroundMoveX -= moveSpeed;
-		if (is_key_down(68))
-			backgroundMoveX += moveSpeed;
-		if (is_key_down(87))
-			backgroundMoveY -= moveSpeed;
-		if (is_key_down(83))
-			backgroundMoveY += moveSpeed;
-		if (is_key_down(81) && backgroundZoom > 1.0f)
+		if (isBackgroundAuto && path.size() > 1)
 		{
-			backgroundZoom -= (zoomSpeed);
+			time_t currentTime = clock();
+			time_t cumul = 0;
+			for (int i = 0; i < path.size(); i++)
+			{
+				cumul += path[i].second;
+				if (currentTime < cumul)
+				{
+					backgroundMoveX = (path[i].first.x() + path[i - 1].first.x()) * (float(currentTime) / float(cumul));
+					backgroundMoveY = (path[i].first.y() + path[i - 1].first.y()) * (float(currentTime) / float(cumul));
+					backgroundZoom  = (path[i].first.z() + path[i - 1].first.z()) * (float(currentTime) / float(cumul));
+					break;
+				}
+			}
 		}
-		if (is_key_down(69))
+		else
 		{
-			backgroundZoom += (zoomSpeed);
+			float moveSpeed = 0.1f / backgroundZoom;
+			float zoomSpeed = 0.5f * backgroundZoom / 3;
+			if (is_key_down(65))
+				backgroundMoveX -= moveSpeed;
+			if (is_key_down(68))
+				backgroundMoveX += moveSpeed;
+			if (is_key_down(87))
+				backgroundMoveY -= moveSpeed;
+			if (is_key_down(83))
+				backgroundMoveY += moveSpeed;
+			if (is_key_down(81) && backgroundZoom > 1.0f)
+			{
+				backgroundZoom -= (zoomSpeed);
+			}
+			if (is_key_down(69))
+			{
+				backgroundZoom += (zoomSpeed);
+			}
 		}
+
+
 		float newX = abs(player.getNode()->get_position().x() + movement);
 		if (newX < roadWidth - playerSize)
 		{
