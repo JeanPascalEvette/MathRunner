@@ -79,6 +79,8 @@ namespace octet {
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
+	time_t divisor_last_change;
+	time_t divisor_change_step_time;
 	int divisor_change;
 	int lastDist;
 	struct my_vertex {
@@ -115,6 +117,8 @@ namespace octet {
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  divisor_change = 20;
+	  divisor_last_change = clock();
+	  divisor_change_step_time = 100;
 	  
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -207,6 +211,8 @@ namespace octet {
 
 	void handleMovement()
 	{
+		int max_divisor = 500;
+
 		player.getNode()->translate(vec3(0, 0, -3.0f));
 
 		float movement = 0.0f;
@@ -235,6 +241,15 @@ namespace octet {
 					break;
 				}
 			}
+
+			float posX = player.getNode()->get_position().x();
+			if (clock() > divisor_last_change + divisor_change_step_time &&
+				(player.getNode()->get_position().x() > 0 && divisor_change <= max_divisor ||
+				player.getNode()->get_position().x() < 0 && divisor_change > 1))
+			{
+				divisor_change += player.getNode()->get_position().x();
+				divisor_last_change = clock();
+			}
 		}
 		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
@@ -256,6 +271,17 @@ namespace octet {
 			{
 				backgroundZoom += (zoomSpeed);
 			}
+			//Code added to change color palette of Mandelbrot
+			if (is_key_down(key_alt) && divisor_change <= max_divisor)
+			{
+				divisor_change += 1;
+			}
+
+			if (is_key_down(key_backspace) && divisor_change > 1)
+			{
+				divisor_change -= 1;
+			}
+
 		}
 
 
@@ -266,18 +292,6 @@ namespace octet {
 		}
 		if (background.node() == nullptr)
 			return;
-
-		//Code added to change color palette of Mandelbrot
-		int max_divisor = 500;
-		if (is_key_down(key_alt) && divisor_change <= max_divisor)
-		{
-			divisor_change += 1;
-		}
-
-		if (is_key_down(key_backspace) && divisor_change > 1)
-		{
-			divisor_change -= 1;
-		}
 
 
 		background.node()->translate(-background.node()->get_position());
