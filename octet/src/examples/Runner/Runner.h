@@ -113,7 +113,7 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 1.0f;
+	  backgroundZoom = 0.8f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  divisor_change = 20;
@@ -293,6 +293,7 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+		
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
