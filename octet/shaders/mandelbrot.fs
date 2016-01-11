@@ -61,7 +61,7 @@ void main() {
 	vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
 
 	//Alternative Palette
-	//vec3 myHSVVec = vec3((float(n)/float(MaxIterations))*20.0, 0.99, 0.99);
+	//vec3 myHSVVec = vec3((float(n)/float(MaxIterations))*(float(divisor)), 0.99, 0.99);
 
 	vec3 myRgbVec =  hsv2rgb(myHSVVec);
 

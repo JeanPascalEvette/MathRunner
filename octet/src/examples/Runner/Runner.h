@@ -108,7 +108,7 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 1.0f;
+	  backgroundZoom = 0.8f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  divisor_change = 20;
@@ -231,8 +231,8 @@ namespace octet {
 			return;
 
 		//Code added to change color palette of Mandelbrot
-		int max_divisor = 500;
-		if (is_key_down(key_alt) && divisor_change <= max_divisor)
+		int max_divisor = 256;
+		if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
 		{
 			divisor_change += 1;
 		}
