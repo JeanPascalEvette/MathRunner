@@ -37,7 +37,7 @@ namespace octet {
 	class Background {
 	public:
 		Background() {}
-		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY, ref<param_uniform> ChangeDiv)
+		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY, ref<param_uniform> ChangeDiv, ref<param_uniform> CRe, ref<param_uniform> CIm)
 		{
 			_node = node;
 			_mat = mat;
@@ -45,12 +45,16 @@ namespace octet {
 			_moveX = moveX;
 			_moveY = moveY;
 			_ChangeDiv = ChangeDiv;
+			_CRe = CRe;
+			_CIm = CIm;
 		}
 
 		ref<param_uniform> moveX() { return _moveX; }
 		ref<param_uniform> moveY() { return _moveY; }
 		ref<param_uniform> ChangeDiv() { return _ChangeDiv; }
 		ref<param_uniform> zoom() { return _zoom; }
+		ref<param_uniform> real() { return _CRe; }
+		ref<param_uniform> im() { return _CIm; }
 		ref<material> mat() { return _mat; }
 		ref<scene_node> node() { return _node; }
 	private:
@@ -59,6 +63,8 @@ namespace octet {
 		ref<param_uniform> _moveX;
 		ref<param_uniform> _moveY;
 		ref<param_uniform> _ChangeDiv;
+		ref<param_uniform> _CRe;
+		ref<param_uniform> _CIm;
 		ref<scene_node> _node;
 	};
     // scene for drawing box
@@ -79,6 +85,8 @@ namespace octet {
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
+	float cRe;
+	float cIm;
 	time_t divisor_last_change;
 	time_t divisor_change_step_time;
 	int divisor_change;
@@ -100,7 +108,7 @@ namespace octet {
 	  julia_shader_.init();
 
 	  freeCamera = false;
-	  isBackgroundAuto = true;
+	  isBackgroundAuto = false;
       app_scene =  new visual_scene();
       app_scene->create_default_camera_and_lights();
 	  app_scene->get_camera_instance(0)->set_far_plane(1000.0f);
@@ -116,10 +124,14 @@ namespace octet {
 	  backgroundZoom = 0.8f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
+	  cRe = -0.559;
+	  cIm = 0.663;
 	  divisor_change = 20;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
 	  
+
+
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
 	  material *purple = new material(vec4(1, 0, 1, 1));
@@ -254,6 +266,19 @@ namespace octet {
 		}
 		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
+			float moveSpeed = 0.0005f;
+			if (is_key_down(65))
+				cRe -= moveSpeed;
+			if (is_key_down(68))
+				cRe += moveSpeed;
+			if (is_key_down(87))
+				cIm -= moveSpeed;
+			if (is_key_down(83))
+				cIm += moveSpeed;
+
+
+			/* This code was used when implementing the mandlebrot set.
+			Not used currently for Julia set
 			float moveSpeed = 0.1f / backgroundZoom;
 			float zoomSpeed = 0.5f * backgroundZoom / 3;
 			if (is_key_down(65))
@@ -272,6 +297,7 @@ namespace octet {
 			{
 				backgroundZoom += (zoomSpeed);
 			}
+			*/
 			//Code added to change color palette of Mandelbrot
 			if (is_key_down(key_alt) && divisor_change <= max_divisor)
 			{
@@ -303,12 +329,14 @@ namespace octet {
 		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
 		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
 		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
+		background.mat()->set_uniform(background.im(), &cIm, sizeof(cIm));
+		background.mat()->set_uniform(background.real(), &cRe, sizeof(cRe));
 		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
 	}
 
 	void drawBackground(const vec3 &position, const float &width, const float &height)
 	{
-		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
+		param_shader *shader = new param_shader("shaders/default.vs", "shaders/julia.fs");
 
 
 
@@ -319,6 +347,8 @@ namespace octet {
 		param_uniform* paramMoveX = backgroundMaterial->add_uniform(&backgroundMoveX, app_utils::get_atom("moveX"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramMoveY = backgroundMaterial->add_uniform(&backgroundMoveY, app_utils::get_atom("moveY"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramChange_div = backgroundMaterial->add_uniform(&divisor_change, app_utils::get_atom("divisor"), GL_INT, 1, param::stage_fragment);
+		param_uniform* paramCRe = backgroundMaterial->add_uniform(&cRe, app_utils::get_atom("cRe"), GL_FLOAT, 1, param::stage_fragment);
+		param_uniform* paramCIm = backgroundMaterial->add_uniform(&cIm, app_utils::get_atom("cIm"), GL_FLOAT, 1, param::stage_fragment);
 
 
 		mesh *bg = new mesh(); // attach properties, octet stuff
@@ -370,7 +400,7 @@ namespace octet {
 		//Move the hole to the required location, then add it to the list of holes.
 		node->translate(position);
 
-		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div);
+		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div, paramCRe, paramCIm);
 
 	}
 
