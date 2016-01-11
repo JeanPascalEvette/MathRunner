@@ -22,8 +22,8 @@ vec3 hsv2rgb(vec3 c)
 
 void main() { 
 	int divisor = 200;
-	float squareSize = 0.03;
-	float squareBorder = 0.009;
+	float crossSize = 0.05;
+	float crossWidth = 0.009;
 	float x = model_pos_.x + width/2.0;  // xyz position of my square. Position relative to the middle of the section
 	float y = model_pos_.y + height/2.0; // off set to put everything on 0,0
 
@@ -46,6 +46,8 @@ void main() {
 	//		|| (c_im > cIm - squareSize - squareBorder && c_im < cIm - squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))
 	//	|| ((c_re > cRe + squareSize - squareBorder && c_re < cRe + squareSize + squareBorder && (c_im < cIm + squareSize && c_im > cIm - squareSize)) 
 	//		|| (c_im > cIm + squareSize - squareBorder && c_im < cIm + squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))){
+	if((c_re < cRe + crossSize && c_re > cRe - crossSize && c_im < cIm + crossWidth && c_im > cIm - crossWidth)
+		|| (c_im < cIm + crossSize && c_im > cIm - crossSize && c_re < cRe + crossWidth && c_re > cRe - crossWidth)){
 		gl_FragColor = vec4(1.0,1.0,1.0,1.0);
 		return;
 	}
