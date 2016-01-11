@@ -23,7 +23,8 @@ vec3 hsv2rgb(vec3 c)
 void main() { 
 	int divisor = 200;
 	float crossSize = 0.05;
-	float crossWidth = 0.009;
+	float crossWidth = 0.005;
+	float crossWidthBlack = crossWidth * 2.2;
 	float x = model_pos_.x + width/2.0;  // xyz position of my square. Position relative to the middle of the section
 	float y = model_pos_.y + height/2.0; // off set to put everything on 0,0
 
@@ -40,15 +41,22 @@ void main() {
 	float c_im = (MaxIm - y*Im_factor + 0.2*zoom) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor - 0.5*zoom) * (1.0/zoom);
 
-
-
-	//if(((c_re > cRe - squareSize - squareBorder && c_re < cRe - squareSize + squareBorder && (c_im < cIm + squareSize && c_im > cIm - squareSize)) 
-	//		|| (c_im > cIm - squareSize - squareBorder && c_im < cIm - squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))
-	//	|| ((c_re > cRe + squareSize - squareBorder && c_re < cRe + squareSize + squareBorder && (c_im < cIm + squareSize && c_im > cIm - squareSize)) 
-	//		|| (c_im > cIm + squareSize - squareBorder && c_im < cIm + squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))){
+	//Creating borders around minimap
+	if(MinRe + x*Re_factor > 1.7 || MinRe + x*Re_factor < -1.97 || MaxIm - y*Im_factor > 1.46 || MaxIm - y*Im_factor < -2.22)
+	{
+		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
+		return;
+	}
+	
+	//adding the cross
 	if((c_re < cRe + crossSize && c_re > cRe - crossSize && c_im < cIm + crossWidth && c_im > cIm - crossWidth)
 		|| (c_im < cIm + crossSize && c_im > cIm - crossSize && c_re < cRe + crossWidth && c_re > cRe - crossWidth)){
 		gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+		return;
+	} //Adding borders to cross
+	else if((c_re < cRe + crossSize + crossWidth && c_re > cRe - crossSize - crossWidth && c_im < cIm + crossWidthBlack && c_im > cIm - crossWidthBlack)
+		|| (c_im < cIm + crossSize  + crossWidth && c_im > cIm - crossSize - crossWidth && c_re < cRe + crossWidthBlack && c_re > cRe - crossWidthBlack)){
+		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 		return;
 	}
 
