@@ -248,6 +248,7 @@ namespace octet {
 				player.getNode()->get_position().x() < 0 && divisor_change > 1))
 			{
 				divisor_change += player.getNode()->get_position().x();
+				if (divisor_change < 1) divisor_change = 1;
 				divisor_last_change = clock();
 			}
 		}
