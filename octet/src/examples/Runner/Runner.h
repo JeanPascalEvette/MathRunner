@@ -333,7 +333,7 @@ namespace octet {
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
 		minimapNode->translate(-minimapNode->get_position());
-		minimapNode->translate(vec3(0, 0, player.getNode()->get_position().z()));
+		minimapNode->translate(vec3(6.0f, 2.5f, player.getNode()->get_position().z()));
 		
 		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
 		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
