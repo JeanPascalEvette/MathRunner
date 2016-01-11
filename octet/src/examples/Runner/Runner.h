@@ -66,8 +66,10 @@ namespace octet {
     ref<visual_scene> app_scene;
 	Background background;
 	bool freeCamera;
+	bool isBackgroundAuto;
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
+	std::vector<std::pair<vec3, time_t>> path;
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -77,6 +79,8 @@ namespace octet {
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
+	time_t divisor_last_change;
+	time_t divisor_change_step_time;
 	int divisor_change;
 	int lastDist;
 	struct my_vertex {
@@ -96,6 +100,7 @@ namespace octet {
 	  julia_shader_.init();
 
 	  freeCamera = false;
+	  isBackgroundAuto = true;
       app_scene =  new visual_scene();
       app_scene->create_default_camera_and_lights();
 	  app_scene->get_camera_instance(0)->set_far_plane(1000.0f);
@@ -112,6 +117,8 @@ namespace octet {
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  divisor_change = 20;
+	  divisor_last_change = clock();
+	  divisor_change_step_time = 100;
 	  
 	  material *red = new material(vec4(1, 0, 0, 1));
 	  material *blue = new material(vec4(0, 0, 1, 1));
@@ -138,6 +145,14 @@ namespace octet {
 		  createObstacle((i+1) * obstacleGap, new mesh_sphere(vec3(0), 1), blue);
 	  }
 
+	  //This is used to generate a path for the Mandlebrot's camera
+	  //Format : 
+	  // pair( vec3(MoveX, MoveY, Zoom), time (in ms) )
+	  //Can add any number of entries > 1. Please note that the time is cumulative (i.e if the first one is 3000, and the second one 10000 the second one will trigger 13sec after start of run)
+	  path = std::vector<std::pair<vec3, time_t>>(); 
+	  path.push_back(std::pair<vec3, time_t>(vec3(backgroundMoveX, backgroundMoveY, backgroundZoom), 0));
+	  path.push_back(std::pair<vec3, time_t>(vec3(-0.6f, -0.0f, 1.5f), 3000));
+	  path.push_back(std::pair<vec3, time_t>(vec3(-0.7f, -0.15f, 13.75f), 10000));
 
 
     }
@@ -196,6 +211,8 @@ namespace octet {
 
 	void handleMovement()
 	{
+		int max_divisor = 500;
+
 		player.getNode()->translate(vec3(0, 0, -3.0f));
 
 		float movement = 0.0f;
@@ -204,24 +221,70 @@ namespace octet {
 		if (is_key_down(key_right))
 			movement += 0.5f;
 
-		float moveSpeed = 0.1f / backgroundZoom;
-		float zoomSpeed = 0.5f * backgroundZoom / 3;
-		if (is_key_down(65))
-			backgroundMoveX -= moveSpeed;
-		if (is_key_down(68))
-			backgroundMoveX += moveSpeed;
-		if (is_key_down(87))
-			backgroundMoveY -= moveSpeed;
-		if (is_key_down(83))
-			backgroundMoveY += moveSpeed;
-		if (is_key_down(81) && backgroundZoom > 1.0f)
+		
+		if (isBackgroundAuto && path.size() > 1)
 		{
-			backgroundZoom -= (zoomSpeed);
+			time_t currentTime = clock();
+			time_t cumul = 0;
+			for (int i = 0; i < path.size(); i++)
+			{
+				cumul += path[i].second;
+				if (currentTime < cumul)
+				{
+					//The factor calculates how much of the current path has already been traveled
+					float factor = (float(currentTime - (cumul - path[i].second)) / float(path[i].second));
+
+					//Then the factor is applied to each property
+					backgroundMoveX = (path[i - 1].first.x() + (path[i].first.x() - path[i - 1].first.x()) * factor);
+					backgroundMoveY = (path[i - 1].first.y() + (path[i].first.y() - path[i - 1].first.y()) * factor);
+					backgroundZoom  = (path[i - 1].first.z() + (path[i].first.z() - path[i - 1].first.z()) * factor);
+					break;
+				}
+			}
+
+			float posX = player.getNode()->get_position().x();
+			if (clock() > divisor_last_change + divisor_change_step_time &&
+				(player.getNode()->get_position().x() > 0 && divisor_change <= max_divisor ||
+				player.getNode()->get_position().x() < 0 && divisor_change > 1))
+			{
+				divisor_change += player.getNode()->get_position().x();
+				divisor_last_change = clock();
+			}
 		}
-		if (is_key_down(69))
+		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
-			backgroundZoom += (zoomSpeed);
+			float moveSpeed = 0.1f / backgroundZoom;
+			float zoomSpeed = 0.5f * backgroundZoom / 3;
+			if (is_key_down(65))
+				backgroundMoveX -= moveSpeed;
+			if (is_key_down(68))
+				backgroundMoveX += moveSpeed;
+			if (is_key_down(87))
+				backgroundMoveY -= moveSpeed;
+			if (is_key_down(83))
+				backgroundMoveY += moveSpeed;
+			if (is_key_down(81) && backgroundZoom > 1.0f)
+			{
+				backgroundZoom -= (zoomSpeed);
+			}
+			if (is_key_down(69))
+			{
+				backgroundZoom += (zoomSpeed);
+			}
+			//Code added to change color palette of Mandelbrot
+			if (is_key_down(key_alt) && divisor_change <= max_divisor)
+			{
+				divisor_change += 1;
+			}
+
+			if (is_key_down(key_backspace) && divisor_change > 1)
+			{
+				divisor_change -= 1;
+			}
+
 		}
+
+
 		float newX = abs(player.getNode()->get_position().x() + movement);
 		if (newX < roadWidth - playerSize)
 		{
@@ -230,18 +293,7 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
-		//Code added to change color palette of Mandelbrot
-		int max_divisor = 256;
-		if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
-		{
-			divisor_change += 1;
-		}
-
-		if (is_key_down(key_backspace) && divisor_change > 1)
-		{
-			divisor_change -= 1;
-		}
-
+		
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
@@ -340,7 +392,7 @@ namespace octet {
 	  }
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
-	  std::cout << "MoveX : " << backgroundMoveX << "\nMoveY : " << backgroundMoveY << "\nZoom : " << backgroundZoom << "\n";
+	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
 
 
 
