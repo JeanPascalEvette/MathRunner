@@ -121,12 +121,12 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 0.8f;
+	  backgroundZoom = 0.6f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  cRe = -0.559;
 	  cIm = 0.663;
-	  divisor_change = 20;
+	  divisor_change = 150;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
 	  
@@ -139,7 +139,7 @@ namespace octet {
 
 	  mat4t mat;
 	  mat.translate(0, -10, 0);
-	  listGameObjects.push_back(createGameObject(mat, new mesh_box(vec3(roadWidth, 0.1f, 100000)), red, false, 1.0f));
+	  //listGameObjects.push_back(createGameObject(mat, new mesh_box(vec3(roadWidth, 0.1f, 100000)), red, false, 1.0f));
 
 
 
@@ -236,6 +236,8 @@ namespace octet {
 		
 		if (isBackgroundAuto && path.size() > 1)
 		{
+
+			/*
 			time_t currentTime = clock();
 			time_t cumul = 0;
 			for (int i = 0; i < path.size(); i++)
@@ -263,6 +265,7 @@ namespace octet {
 				if (divisor_change < 1) divisor_change = 1;
 				divisor_last_change = clock();
 			}
+			*/
 		}
 		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
