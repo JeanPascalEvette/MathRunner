@@ -8,10 +8,8 @@
 varying vec3 model_pos_;
 uniform float width;
 uniform float height;
-uniform float zoom;
-uniform float moveX;
-uniform float moveY;
-uniform int divisor;
+uniform float cRe;
+uniform float cIm;
 		
 vec3 hsv2rgb(vec3 c)
 {
@@ -23,7 +21,9 @@ vec3 hsv2rgb(vec3 c)
 //vec3 myRgbVec =  hsv2rgb(myHSVVec); this is to pass the value to the HSV to RGB function
 
 void main() { 
-
+	int divisor = 200;
+	float squareSize = 0.03;
+	float squareBorder = 0.009;
 	float x = model_pos_.x + width/2.0;  // xyz position of my square. Position relative to the middle of the section
 	float y = model_pos_.y + height/2.0; // off set to put everything on 0,0
 
@@ -36,8 +36,19 @@ void main() {
 	float Im_factor = (MaxIm-MinIm) / (height-1.0);
 	int MaxIterations = 300;
 	
-	float c_im = (MaxIm - y*Im_factor + moveY*zoom) * (1.0/zoom);
-	float c_re = (MinRe + x*Re_factor + moveX*zoom) * (1.0/zoom);
+	float zoom = 1.7;
+	float c_im = (MaxIm - y*Im_factor + 0.2*zoom) * (1.0/zoom);
+	float c_re = (MinRe + x*Re_factor - 0.5*zoom) * (1.0/zoom);
+
+
+
+	//if(((c_re > cRe - squareSize - squareBorder && c_re < cRe - squareSize + squareBorder && (c_im < cIm + squareSize && c_im > cIm - squareSize)) 
+	//		|| (c_im > cIm - squareSize - squareBorder && c_im < cIm - squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))
+	//	|| ((c_re > cRe + squareSize - squareBorder && c_re < cRe + squareSize + squareBorder && (c_im < cIm + squareSize && c_im > cIm - squareSize)) 
+	//		|| (c_im > cIm + squareSize - squareBorder && c_im < cIm + squareSize + squareBorder && (c_re < cRe + squareSize && c_re > cRe - squareSize)))){
+		gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+		return;
+	}
 
 	float Z_re = c_re, Z_im = c_im;
 	bool isInside = true;
