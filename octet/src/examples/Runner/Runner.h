@@ -181,6 +181,8 @@ namespace octet {
 		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Why?
 		mat.translate(relativePos); //Why??
 		listGameObjects.push_back(createGameObject(mat, msh, mtl, true, 99999.0f));
+
+		
 		
 	}
 
@@ -230,7 +232,7 @@ namespace octet {
 	{
 		int max_divisor = 500;
 
-		player.getNode()->translate(vec3(0, 0, -10.0f)); // to move the obstacles!
+		player.getNode()->translate(vec3(0, 0, -5.0f)); // to move the obstacles!
 
 		float movement = 0.0f;
 		if (is_key_down(key_left))
@@ -341,14 +343,14 @@ namespace octet {
 			}
 		}
 
-		myIterator = listGameObjects.begin();
+		myIterator = listGameObjects.begin();//iterator for another method of deleting elements
 
-		//to delete the obstacles that pass the player. (doesn't Work!!)
+		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
 		for (int i = 0; i < listGameObjects.size(); ++i)
 		{
-			if ((listGameObjects.size()>0)&&((listGameObjects[i].getNode()->get_position().z()) > (player.getNode()->get_position().z())))
+			if ((listGameObjects.size()>0)&&((listGameObjects[0].getNode()->get_position().z()) > (player.getNode()->get_position().z())+3))
 			{
-				listGameObjects.erase(listGameObjects.begin());
+				listGameObjects.erase(listGameObjects.begin(), listGameObjects.begin()+i);
 				
 			}
 
