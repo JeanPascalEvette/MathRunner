@@ -76,6 +76,10 @@ namespace octet {
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
 	std::vector<std::pair<vec3, time_t>> path;
+	ref<param_uniform> paramMinimapCRe;
+	ref<param_uniform> paramMinimapCIm;
+	ref<scene_node> minimapNode;
+	ref<material> minimapMaterial;
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -151,6 +155,7 @@ namespace octet {
       int vx = 0, vy = 0;
 	  get_viewport_size(vx, vy);
 	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), vx, vy);
+	  drawMinimap();
 
 	  for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
 	  {
@@ -327,7 +332,8 @@ namespace octet {
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
-		
+		minimapNode->translate(-minimapNode->get_position());
+		minimapNode->translate(vec3(6.0f, 2.5f, player.getNode()->get_position().z()));
 		
 		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
 		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
@@ -335,6 +341,8 @@ namespace octet {
 		background.mat()->set_uniform(background.im(), &cIm, sizeof(cIm));
 		background.mat()->set_uniform(background.real(), &cRe, sizeof(cRe));
 		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
+		minimapMaterial->set_uniform(paramMinimapCIm, &cIm, sizeof(cIm));
+		minimapMaterial->set_uniform(paramMinimapCRe, &cRe, sizeof(cRe));
 	}
 
 	void drawBackground(const vec3 &position, const float &width, const float &height)
@@ -405,6 +413,73 @@ namespace octet {
 
 		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div, paramCRe, paramCIm);
 
+	}
+
+
+	void drawMinimap()
+	{
+		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
+
+		float width = 5.0f;
+		float height = 5.0f;
+
+		minimapMaterial = new material(vec4(0, 0, 0, 1), shader); //to attach the material to
+		minimapMaterial->add_uniform(&width, app_utils::get_atom("width"), GL_FLOAT, 1, param::stage_fragment); // to pass parameters to shader
+		minimapMaterial->add_uniform(&height, app_utils::get_atom("height"), GL_FLOAT, 1, param::stage_fragment);
+		paramMinimapCRe = minimapMaterial->add_uniform(&cRe, app_utils::get_atom("cRe"), GL_FLOAT, 1, param::stage_fragment);
+		paramMinimapCIm = minimapMaterial->add_uniform(&cIm, app_utils::get_atom("cIm"), GL_FLOAT, 1, param::stage_fragment);
+
+
+		mesh *bg = new mesh(); // attach properties, octet stuff
+
+
+		size_t num_vertices = 4; // creating four vertices for the 2 triangles creating the rectangle
+		size_t num_indices = 6;
+		bg->allocate(sizeof(my_vertex) * num_vertices, sizeof(uint32_t) * num_indices);
+		bg->set_params(sizeof(my_vertex), num_indices, num_vertices, GL_TRIANGLES, GL_UNSIGNED_INT);
+
+		// describe the structure of my_vertex to OpenGL
+		bg->add_attribute(attribute_pos, 3, GL_FLOAT, 0);
+
+
+		{
+			// these write-only locks give access to the vertices and indices.
+			// they will be released at the next } (the end of the scope)
+			gl_resource::wolock vl(bg->get_vertices());
+			my_vertex *vtx = (my_vertex *)vl.u8();
+			gl_resource::wolock il(bg->get_indices());
+			uint32_t *idx = il.u32();
+
+			vtx->pos = vec3p(-width / 2, height / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(-width / 2, -height / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(width / 2, height / 2, 0);
+			vtx++;
+			vtx->pos = vec3p(width / 2, -height / 2, 0);
+			// make the triangles
+			uint32_t vn = 0;
+			// 0--2
+			// | \|
+			// 1--3
+			idx[0] = 0;
+			idx[1] = 1;
+			idx[2] = 3;
+			idx[3] = 0;
+			idx[4] = 3;
+			idx[5] = 2;
+		}
+
+
+		//Add the hole to the app_scene
+		scene_node *node = new scene_node();
+		app_scene->add_child(node);
+		app_scene->add_mesh_instance(new mesh_instance(node, bg, minimapMaterial));
+
+		//Move the hole to the required location, then add it to the list of holes.
+		node->translate(vec3(0,0,player.getNode()->get_position().z()));
+
+		minimapNode = node;
 	}
 
     /// this is called to draw the world
