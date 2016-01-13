@@ -174,7 +174,7 @@ namespace octet {
 
 	void createObstacle(float distanceFromPlayer, mesh *msh, material *mtl)
 	{
-		float xCoord = (rand() % 8 - 4.0f);
+		float xCoord = (rand() % 8) - 4.0f;
 		vec3 relativePos = vec3(xCoord, 0, -distanceFromPlayer);
 		mat4t mat;
 		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z());
@@ -424,19 +424,31 @@ namespace octet {
 
 	  handleMovement();
 
-	  index = rand() % 2;
+	  index = rand() % 4;
 
 	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist)
 	  {
 		  if (index == 0) {
-			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(0, 0, 1, 1)));
+			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
 		  }
-		  else {
+		  else if(index==1) {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
 		  }
+
+		  else if(index==2) {
+			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+		  }
+
+		  else {
+			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+		  }
 	  }
+
+	  /*new mesh_box(vec3(playerSize)), purple, true, 10.0f)*/
 
 	  //Collision???
 	 /* if (-player.getNode()->get_position().x()) {
