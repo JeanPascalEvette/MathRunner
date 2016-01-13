@@ -76,6 +76,7 @@ namespace octet {
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
 	std::vector<std::pair<vec3, time_t>> path;
+	std::vector<GameObject>::iterator myIterator;//New iterator
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -177,9 +178,10 @@ namespace octet {
 		float xCoord = (rand() % 8) - 4.0f;
 		vec3 relativePos = vec3(xCoord, 0, -distanceFromPlayer);
 		mat4t mat;
-		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z());
-		mat.translate(relativePos);
+		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Why?
+		mat.translate(relativePos); //Why??
 		listGameObjects.push_back(createGameObject(mat, msh, mtl, true, 99999.0f));
+		
 	}
 
 	GameObject createGameObject(mat4t_in mat, mesh *msh, material *mtl, bool is_dynamic = false, float mass = 1)
@@ -326,7 +328,33 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+		if (listGameObjects.size()>0)
+		{
+			
+			for (int i = 0; i < listGameObjects.size(); ++i)
+			{
+				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
+					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f)))
+				{
+					cIm += 0.0005f;
+				}
+			}
+		}
+
+		myIterator = listGameObjects.begin();
+
+		//to delete the obstacles that pass the player. (doesn't Work!!)
+		for (int i = 0; i < listGameObjects.size(); ++i)
+		{
+			if ((listGameObjects.size()>0)&&((listGameObjects[i].getNode()->get_position().z()) > (player.getNode()->get_position().z())))
+			{
+				listGameObjects.erase(listGameObjects.begin());
+				
+			}
+
+		}
 		
+		std::cout << "size of GameObject: " << listGameObjects.size()<<"\n";//to check if im deleting or not
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
@@ -446,17 +474,16 @@ namespace octet {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
 		  }
+
+		  
 	  }
 
-	  /*new mesh_box(vec3(playerSize)), purple, true, 10.0f)*/
+	 
 
-	  //Collision???
-	 /* if (-player.getNode()->get_position().x()) {
-	  
-	  }*/
+	 
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
-	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
+       	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
 
 
 
