@@ -109,6 +109,8 @@ namespace octet {
     /// this is called once OpenGL is initialized
     void app_init() {
 
+	  srand(static_cast<unsigned int>(time(0)));
+
 	  julia_shader_.init();
 
 	  freeCamera = false;
@@ -120,7 +122,7 @@ namespace octet {
 	  obstacleGap = 50;
 	  backgroundDistance = 500;
 	  background = Background();
-	  roadWidth = 5;
+	  roadWidth = 8;
 	  playerSize = 1;
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
@@ -157,10 +159,11 @@ namespace octet {
 	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), vx, vy);
 	  drawMinimap();
 
-	  for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
+	  //Creates the first 9 Obstacles (Why??)
+	  /*for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
 	  {
 		  createObstacle((i+1) * obstacleGap, new mesh_sphere(vec3(0), 1), blue);
-	  }
+	  }*/
 
 	  //This is used to generate a path for the Mandlebrot's camera
 	  //Format : 
@@ -176,11 +179,11 @@ namespace octet {
 
 	void createObstacle(float distanceFromPlayer, mesh *msh, material *mtl)
 	{
-		float xCoord = rand() % 5 - 2.5f;
+		float xCoord = (rand() % 8) - 4.0f;
 		vec3 relativePos = vec3(xCoord, 0, -distanceFromPlayer);
 		mat4t mat;
-		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z());
-		mat.translate(relativePos);
+		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Why?
+		mat.translate(relativePos); //Why??
 		listGameObjects.push_back(createGameObject(mat, msh, mtl, true, 99999.0f));
 	}
 
@@ -230,7 +233,7 @@ namespace octet {
 	{
 		int max_divisor = 500;
 
-		player.getNode()->translate(vec3(0, 0, -3.0f));
+		player.getNode()->translate(vec3(0, 0, -5.0f)); // to move the obstacles!
 
 		float movement = 0.0f;
 		if (is_key_down(key_left))
@@ -307,7 +310,7 @@ namespace octet {
 			}
 			*/
 			//Code added to change color palette of Mandelbrot
-			if (is_key_down(key_alt) && divisor_change <= max_divisor)
+			if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
 			{
 				divisor_change += 1;
 			}
@@ -328,7 +331,41 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+		if (listGameObjects.size()>0)
+		{
+			
+			for (int i = 0; i < listGameObjects.size(); ++i)
+			{
+				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
+					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f)))
+				{
+					switch (speed_type) {
+					case 1: speedIm = 0.0005f;
+						break;
+					case 2: speedIm = -0.0005f;
+						break;
+					case 3: speedRe = 0.0005f;
+						break;
+					case 4: speedRe = -0.0005f;
+						break;
+					}
+				}
+			}
+		}
+
 		
+		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
+		/*for (int i = 0; i < listGameObjects.size(); ++i)
+		{*/
+		//	if ((listGameObjects.size()>0)&&((listGameObjects[0].getNode()->get_position().z()) > (player.getNode()->get_position().z())+3))
+		//	{
+		//		listGameObjects.erase(listGameObjects.begin());//Problem is probably here!!
+		//			
+		//	}
+
+		/*}*/
+		
+		std::cout << "size of GameObject: " << listGameObjects.size()<<"\n";//to check if im deleting or not
 
 		background.node()->translate(-background.node()->get_position());
 		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
@@ -482,11 +519,40 @@ namespace octet {
 		minimapNode = node;
 	}
 
+	void deleteObstacles()
+	{
+		if (listGameObjects.size() == 0) return;
+		std::vector<GameObject>::iterator it;
+
+		for (it = listGameObjects.begin(); it != listGameObjects.end(); it = listGameObjects.begin())
+		{
+			if ((*it).getNode()->get_position().z() > player.getNode()->get_position().z())
+			{
+				app_scene->delete_mesh_instance((*it).getMeshInstance());
+				app_scene->getWorld()->removeRigidBody((*it).getRigidBody());
+				listGameObjects.erase(it);
+				if (listGameObjects.size() == 0) return;
+			}
+			else
+				break;
+		}
+		listGameObjects.shrink_to_fit();
+	}
+
+
+	int index=1;
+	int speed_type = 1;
+	float speedIm = 0.0f;
+	float speedRe = 0.0f;
+
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) { 
       int vx = 0, vy = 0;
       get_viewport_size(vx, vy);
       app_scene->begin_render(vx, vy);
+	  
+	  cIm += speedIm;
+	  cRe += speedRe;
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
@@ -494,11 +560,41 @@ namespace octet {
 
 	  handleMovement();
 
-	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist)
+	  deleteObstacles();
+
+	  index = rand() % 4;
+
+	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
 	  {
-		  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(0, 0, 1, 1)));
-		  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+		  if (index == 0) {
+			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+			  speed_type = 1;
+		  }
+		  else if(index==1) {
+			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+			  speed_type = 2;
+		  }
+
+		  else if(index==2) {
+			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+			  speed_type = 3;
+		  }
+
+		  else {
+			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+			  speed_type = 4;
+		  }
+
+		  
 	  }
+
+	 
+
+	 
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
 	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
