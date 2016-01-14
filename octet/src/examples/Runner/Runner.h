@@ -410,6 +410,27 @@ namespace octet {
 
 	}
 
+	void deleteObstacles()
+	{
+		if (listGameObjects.size() == 0) return;
+		std::vector<GameObject>::iterator it;
+
+		for (it = listGameObjects.begin(); it != listGameObjects.end(); it = listGameObjects.begin())
+		{
+			if ((*it).getNode()->get_position().z() > player.getNode()->get_position().z())
+			{
+				app_scene->delete_mesh_instance((*it).getMeshInstance());
+				app_scene->getWorld()->removeRigidBody((*it).getRigidBody());
+				listGameObjects.erase(it);
+				if (listGameObjects.size() == 0) return;
+			}
+			else
+				break;
+		}
+		listGameObjects.shrink_to_fit();
+	}
+
+
 	int index=1;
 
     /// this is called to draw the world
@@ -424,27 +445,31 @@ namespace octet {
 
 	  handleMovement();
 
+	  deleteObstacles();
+
 	  index = rand() % 4;
 
-	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist)
+	  float z = -player.getNode()->get_position().z();
+
+	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
 	  {
 		  if (index == 0) {
-			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 		  }
 		  else if(index==1) {
-			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 		  }
 
 		  else if(index==2) {
-			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 		  }
 
 		  else {
-			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 		  }
 	  }
 
