@@ -42,7 +42,7 @@ void main() {
 	float c_re = (MinRe + x*Re_factor - 0.5*zoom) * (1.0/zoom);
 
 	//Creating borders around minimap
-	if(MinRe + x*Re_factor > 1.7 || MinRe + x*Re_factor < -1.97 || MaxIm - y*Im_factor > 1.46 || MaxIm - y*Im_factor < -2.22)
+	if(MinRe + x*Re_factor > 1.72 || MinRe + x*Re_factor < -1.97 || MaxIm - y*Im_factor > 1.48 || MaxIm - y*Im_factor < -2.22)
 	{
 		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 		return;
