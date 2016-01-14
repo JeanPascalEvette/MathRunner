@@ -346,15 +346,15 @@ namespace octet {
 		myIterator = listGameObjects.begin();//iterator for another method of deleting elements
 
 		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
-		for (int i = 0; i < listGameObjects.size(); ++i)
-		{
+		/*for (int i = 0; i < listGameObjects.size(); ++i)
+		{*/
 			if ((listGameObjects.size()>0)&&((listGameObjects[0].getNode()->get_position().z()) > (player.getNode()->get_position().z())+3))
 			{
-				listGameObjects.erase(listGameObjects.begin(), listGameObjects.begin()+i);
-				
+				listGameObjects.erase(listGameObjects.begin());//Problem is probably here!!
+					
 			}
 
-		}
+		/*}*/
 		
 		std::cout << "size of GameObject: " << listGameObjects.size()<<"\n";//to check if im deleting or not
 
