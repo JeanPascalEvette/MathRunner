@@ -338,12 +338,21 @@ namespace octet {
 				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
 					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f)))
 				{
-					cIm += 0.0005f;
+					switch (speed_type) {
+					case 1: speedIm = 0.0005f;
+						break;
+					case 2: speedIm = -0.0005f;
+						break;
+					case 3: speedRe = 0.0005f;
+						break;
+					case 4: speedRe = -0.0005f;
+						break;
+					}
 				}
 			}
 		}
 
-		myIterator = listGameObjects.begin();//iterator for another method of deleting elements
+		myIterator = listGameObjects.begin();//iterator for another method of deleting elements (not used)
 
 		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
 		/*for (int i = 0; i < listGameObjects.size(); ++i)
@@ -441,12 +450,18 @@ namespace octet {
 	}
 
 	int index=1;
+	int speed_type = 1;
+	float speedIm = 0.0f;
+	float speedRe = 0.0f;
 
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) { 
       int vx = 0, vy = 0;
       get_viewport_size(vx, vy);
       app_scene->begin_render(vx, vy);
+
+	  cIm += speedIm;
+	  cRe += speedRe;
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
@@ -461,20 +476,24 @@ namespace octet {
 		  if (index == 0) {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  speed_type = 1;
 		  }
 		  else if(index==1) {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  speed_type = 2;
 		  }
 
 		  else if(index==2) {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  speed_type = 3;
 		  }
 
 		  else {
 			  createObstacle(-player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance + obstacleGap;
+			  speed_type = 4;
 		  }
 
 		  
