@@ -360,6 +360,13 @@ namespace octet {
 					case 4: speedRe += -speed;
 						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, -5.0f));
 						break;
+					case 5: 
+						    /*cRe = 0.0f;
+						    cIm = 0.0f;*/
+						    speedRe = 0.0f;
+						    speedIm = 0.0f;
+						    listGameObjects[i].getNode()->translate(vec3(30.0f, 2.0f, 0.0f));
+						break;
 					}
 				}
 				
@@ -577,7 +584,7 @@ namespace octet {
 
 	  deleteObstacles();
 
-	  int index = rand() % 4;
+	  int index = rand() % 5;
 
 	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
 	  {
@@ -599,10 +606,15 @@ namespace octet {
 			  myMaterial = new material(vec4(0, 1, 0, 1));
 		  }
 
-		  else {
+		  else if(index==3) {
 			  myMesh = new mesh_box(vec3(1.0f));
 			  myMaterial = new material(vec4(0, 0, 1, 1));
 		  }
+
+	     else {
+		  myMesh = new mesh_sphere(vec3(0), 1);
+		  myMaterial = new material(vec4(1, 1, 1, 1));
+	  }
 
 		  createObstacle(obstacleDrawDistance, myMesh, myMaterial, index + 1);
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
