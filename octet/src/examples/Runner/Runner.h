@@ -130,8 +130,8 @@ namespace octet {
 	  backgroundZoom = 0.6f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
-	  cRe = -0.559;
-	  cIm = 0.663;
+	  cRe = -0.500;
+	  cIm = 0.700;
 	  divisor_change = 150;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
