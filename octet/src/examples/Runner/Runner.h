@@ -345,7 +345,8 @@ namespace octet {
 			for (int i = 0; i < listGameObjects.size(); ++i)
 			{
 				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
-					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f)))
+					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f))
+					&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
 				{
 					switch (listGameObjects[i].getBonusType()) {
 					case 1: speedIm += -speed;
@@ -365,7 +366,7 @@ namespace octet {
 						    cIm = 0.0f;*/
 						    speedRe = 0.0f;
 						    speedIm = 0.0f;
-						    listGameObjects[i].getNode()->translate(vec3(30.0f, 2.0f, 0.0f));
+						    listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
 						break;
 					}
 				}
