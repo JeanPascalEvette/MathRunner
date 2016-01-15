@@ -130,7 +130,7 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 
-	  backgroundZoom = 0.6f;
+	  backgroundZoom = 0.2f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
 	  //cRe = -0.559f;
@@ -576,6 +576,8 @@ namespace octet {
 	  
 	  cIm += speedIm;
 	  cRe += speedRe;
+
+	  backgroundZoom += 0.0005f;
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
