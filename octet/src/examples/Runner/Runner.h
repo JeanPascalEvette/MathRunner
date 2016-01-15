@@ -337,7 +337,7 @@ namespace octet {
 			return;
 
 
-
+		
 		float speed = 0.0001f;
 		if (listGameObjects.size()>0)
 		{
@@ -349,15 +349,20 @@ namespace octet {
 				{
 					switch (listGameObjects[i].getBonusType()) {
 					case 1: speedIm += -speed;
+						    listGameObjects[i].getNode()->translate(vec3(0.0f,2.0f,-5.0f));
 						break;
 					case 2: speedIm += speed;
+						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f,-5.0f));
 						break;
 					case 3: speedRe += speed;
+						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, -5.0f));
 						break;
 					case 4: speedRe += -speed;
+						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, -5.0f));
 						break;
 					}
 				}
+				
 			}
 		}
 
@@ -527,6 +532,8 @@ namespace octet {
 
 		minimapNode = node;
 	}
+
+	
 
 	void deleteObstacles()
 	{
