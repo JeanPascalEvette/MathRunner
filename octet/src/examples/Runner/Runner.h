@@ -17,18 +17,21 @@ namespace octet {
 	class GameObject {
 	public:
 		GameObject() {}
-		GameObject(ref<scene_node> node, btRigidBody* rigidBody, ref<mesh_instance> meshInstance)
+		GameObject(ref<scene_node> node, btRigidBody* rigidBody, ref<mesh_instance> meshInstance, int _bonusType)
 		{
 			_node = node;
 			_rigidBody = rigidBody;
 			_meshInstance = meshInstance;
+			bonusType = _bonusType;
 		}
 
 		ref<scene_node> getNode() { return _node; }
 		btRigidBody* getRigidBody() { return _rigidBody; }
 		ref<mesh_instance> getMeshInstance() { return _meshInstance; }
+		int getBonusType() { return bonusType; }
 
 	private:
+		int bonusType;
 		ref<scene_node> _node;
 		btRigidBody* _rigidBody;
 		ref<mesh_instance> _meshInstance;
@@ -119,7 +122,7 @@ namespace octet {
       app_scene->create_default_camera_and_lights();
 	  app_scene->get_camera_instance(0)->set_far_plane(1000.0f);
 	  obstacleDrawDistance = 450;
-	  obstacleGap = 50;
+	  obstacleGap = 100;
 	  backgroundDistance = 500;
 	  background = Background();
 	  roadWidth = 8;
@@ -130,8 +133,10 @@ namespace octet {
 	  backgroundZoom = 0.6f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
-	  cRe = -0.500;
-	  cIm = 0.700;
+	  //cRe = -0.559f;
+	  //cIm = 0.663f;
+	  cRe = -0.0f;
+	  cIm = 0.0f;
 	  divisor_change = 150;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
@@ -156,7 +161,7 @@ namespace octet {
 	  //background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
       int vx = 0, vy = 0;
 	  get_viewport_size(vx, vy);
-	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), vx, vy);
+	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 800, 550);
 	  drawMinimap();
 
 	  //Creates the first 9 Obstacles (Why??)
@@ -177,22 +182,22 @@ namespace octet {
 
     }
 
-	void createObstacle(float distanceFromPlayer, mesh *msh, material *mtl)
+	void createObstacle(float distanceFromPlayer, mesh *msh, material *mtl, int bonusType)
 	{
 		float xCoord = (rand() % 8) - 4.0f;
 		vec3 relativePos = vec3(xCoord, 0, -distanceFromPlayer);
 		mat4t mat;
 		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Why?
 		mat.translate(relativePos); //Why??
-		listGameObjects.push_back(createGameObject(mat, msh, mtl, true, 99999.0f));
+		listGameObjects.push_back(createGameObject(mat, msh, mtl, bonusType, true, 99999.0f));
 	}
 
-	GameObject createGameObject(mat4t_in mat, mesh *msh, material *mtl, bool is_dynamic = false, float mass = 1)
+	GameObject createGameObject(mat4t_in mat, mesh *msh, material *mtl, int bonusType, bool is_dynamic = false, float mass = 1)
 	{
 		btRigidBody* rigidBody = NULL;
 		scene_node* node = NULL;
 		ref<mesh_instance> mi = app_scene->add_shape(mat, msh, mtl, is_dynamic, mass, &rigidBody, &node);
-		return GameObject(node, rigidBody, mi);
+		return GameObject(node, rigidBody, mi, bonusType);
 	}
 
 
@@ -331,6 +336,9 @@ namespace octet {
 		if (background.node() == nullptr)
 			return;
 
+
+
+		float speed = 0.0001f;
 		if (listGameObjects.size()>0)
 		{
 			
@@ -339,14 +347,14 @@ namespace octet {
 				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
 					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f)))
 				{
-					switch (speed_type) {
-					case 1: speedIm = 0.0005f;
+					switch (listGameObjects[i].getBonusType()) {
+					case 1: speedIm += -speed;
 						break;
-					case 2: speedIm = -0.0005f;
+					case 2: speedIm += speed;
 						break;
-					case 3: speedRe = 0.0005f;
+					case 3: speedRe += speed;
 						break;
-					case 4: speedRe = -0.0005f;
+					case 4: speedRe += -speed;
 						break;
 					}
 				}
@@ -368,7 +376,7 @@ namespace octet {
 		std::cout << "size of GameObject: " << listGameObjects.size()<<"\n";//to check if im deleting or not
 
 		background.node()->translate(-background.node()->get_position());
-		background.node()->translate(vec3(0, player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
+		background.node()->translate(vec3(player.getNode()->get_position().x(), player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
 		minimapNode->translate(-minimapNode->get_position());
 		minimapNode->translate(vec3(6.8f + app_scene->get_camera_instance(0)->get_node()->get_position().x(), 3.5f, player.getNode()->get_position().z()));
 		//minimapNode->translate(vec3(1.0f, 2.5f, app_scene->get_camera_instance(0)->get_node()->get_position().z()-10));
@@ -541,7 +549,6 @@ namespace octet {
 	}
 
 
-	int index=1;
 	int speed_type = 1;
 	float speedIm = 0.0f;
 	float speedRe = 0.0f;
@@ -563,32 +570,36 @@ namespace octet {
 
 	  deleteObstacles();
 
-	  index = rand() % 4;
+	  int index = rand() % 4;
 
 	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
 	  {
+		  mesh* myMesh = nullptr;
+		  material* myMaterial = nullptr;
+
+
 		  if (index == 0) {
-			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(0, 1, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
-			  speed_type = 1;
+			  myMesh = new mesh_sphere(vec3(0), 1);
+			  myMaterial = new material(vec4(0, 1, 0, 1));
 		  }
 		  else if(index==1) {
-			  createObstacle(obstacleDrawDistance, new mesh_sphere(vec3(0), 1), new material(vec4(1, 0, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
-			  speed_type = 2;
+			  myMesh = new mesh_sphere(vec3(0), 1);
+			  myMaterial = new material(vec4(0, 0, 1, 1));
 		  }
 
 		  else if(index==2) {
-			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(0, 1, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
-			  speed_type = 3;
+			  myMesh = new mesh_box(vec3(1.0f));
+			  myMaterial = new material(vec4(0, 1, 0, 1));
 		  }
 
 		  else {
-			  createObstacle(obstacleDrawDistance, new mesh_box(vec3(1.0f)), new material(vec4(1, 0, 0, 1)));
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
-			  speed_type = 4;
+			  myMesh = new mesh_box(vec3(1.0f));
+			  myMaterial = new material(vec4(0, 0, 1, 1));
 		  }
+
+		  createObstacle(obstacleDrawDistance, myMesh, myMaterial, index + 1);
+			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+
 
 		  
 	  }
