@@ -6,6 +6,7 @@
 //
 
 #include "Julia.h"
+#include <sstream>
 namespace octet {
   /// Scene containing a box with octet.
 	
@@ -83,6 +84,8 @@ namespace octet {
 	ref<param_uniform> paramMinimapCIm;
 	ref<scene_node> minimapNode;
 	ref<material> minimapMaterial;
+	ref<text_overlay> myText;
+	ref<mesh_text> myInfoText;
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -98,6 +101,9 @@ namespace octet {
 	time_t divisor_change_step_time;
 	int divisor_change;
 	int lastDist;
+	int speed_type;
+	float speedIm;
+	float speedRe;
 	struct my_vertex {
 		vec3p pos;
 	};
@@ -113,6 +119,13 @@ namespace octet {
     void app_init() {
 
 	  srand(static_cast<unsigned int>(time(0)));
+
+	  //Init text
+
+	  aabb bb(vec3(144.5f, 305.0f, 0.0f), vec3(256, 64, 0));
+	  myText = new text_overlay();
+	  myInfoText = new mesh_text(myText->get_default_font(), "", &bb);
+	  myText->add_mesh_text(myInfoText);
 
 	  julia_shader_.init();
 
@@ -140,6 +153,9 @@ namespace octet {
 	  divisor_change = 150;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
+	  speed_type = 1;
+	  speedIm = 0.0f;
+	  speedRe = 0.0f;
 	  
 
 
@@ -548,10 +564,26 @@ namespace octet {
 		listGameObjects.shrink_to_fit();
 	}
 
+	void updateText(int vx, int vy)
+	{
+		myInfoText->clear();
+		// write some text to the overlay
 
-	int speed_type = 1;
-	float speedIm = 0.0f;
-	float speedRe = 0.0f;
+		std::stringstream text;
+		text << "Real Value : " << std::to_string(cRe).substr(0, 7) << "\nImaginary Value : " << std::to_string(cIm).substr(0, 7);
+
+		myInfoText->format(text.str().c_str());
+
+
+
+		// convert it to a mesh.
+		myInfoText->update();
+		// draw the text overlay
+
+		myText->render(vx, vy);
+	}
+
+
 
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) { 
@@ -616,6 +648,9 @@ namespace octet {
       // draw the scene
       app_scene->render((float)vx / vy);
 
+
+	  //draw text
+	  updateText(vx, vy);
 
     }
   };
