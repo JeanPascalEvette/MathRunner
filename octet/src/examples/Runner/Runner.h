@@ -30,6 +30,7 @@ namespace octet {
 		btRigidBody* getRigidBody() { return _rigidBody; }
 		ref<mesh_instance> getMeshInstance() { return _meshInstance; }
 		int getBonusType() { return bonusType; }
+		
 
 	private:
 		int bonusType;
@@ -86,6 +87,7 @@ namespace octet {
 	ref<material> minimapMaterial;
 	ref<text_overlay> myText;
 	ref<mesh_text> myInfoText;
+	
 
 	int obstacleDrawDistance;
 	int obstacleGap;
@@ -142,6 +144,7 @@ namespace octet {
 	  playerSize = 1;
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
+	  
 
 	  backgroundZoom = 0.2f;
 	  backgroundMoveX = 0.0f;
@@ -355,6 +358,8 @@ namespace octet {
 
 		
 		float speed = 0.0001f;
+		
+
 		if (listGameObjects.size()>0)
 		{
 			
@@ -366,29 +371,42 @@ namespace octet {
 				{
 					switch (listGameObjects[i].getBonusType()) {
 					case 1: speedIm += -speed;
+						    
 						    listGameObjects[i].getNode()->translate(vec3(0.0f,0.0f,-5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
-							
-						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							{   
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+								
+							}
 							
 						break;
 					case 2: speedIm += speed;
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						break;
 					case 3: speedRe += speed;
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						break;
 					case 4: speedRe += -speed;
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						break;
 					case 5: 
 						    /*cRe = 0.0f;
@@ -396,6 +414,7 @@ namespace octet {
 						    speedRe = 0.0f;
 						    speedIm = 0.0f;
 						    listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
+							remove_current_bonus();
 						break;
 					}
 				}
@@ -433,6 +452,20 @@ namespace octet {
 		minimapMaterial->set_uniform(paramMinimapCRe, &cRe, sizeof(cRe));
 	}
 
+	void remove_current_bonus() {
+		if (listGameObjects.size() == 0) return;
+		std::vector<GameObject>::iterator it;
+
+		for (it = listGameObjects.begin(); it != listGameObjects.end(); it++)
+		{
+			
+			
+			if ((*it).getNode()->get_position().y() > -8.0f)
+				it->getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
+
+		}
+
+	}
 	void drawBackground(const vec3 &position, const float &width, const float &height)
 	{
 		param_shader *shader = new param_shader("shaders/default.vs", "shaders/julia.fs");
@@ -580,7 +613,7 @@ namespace octet {
 		for (it = listGameObjects.begin(); it != listGameObjects.end(); it = listGameObjects.begin())
 		{
 			if ((*it).getNode()->get_position().z() > player.getNode()->get_position().z())
-			{
+			{   
 				app_scene->delete_mesh_instance((*it).getMeshInstance());
 				app_scene->getWorld()->removeRigidBody((*it).getRigidBody());
 				listGameObjects.erase(it);
