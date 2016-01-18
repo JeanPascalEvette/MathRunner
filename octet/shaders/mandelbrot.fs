@@ -21,6 +21,7 @@ vec3 hsv2rgb(vec3 c)
 //vec3 myRgbVec =  hsv2rgb(myHSVVec); this is to pass the value to the HSV to RGB function
 
 void main() { 
+	float invertedIm = -cIm;
 	int divisor = 200;
 	float crossSize = 0.05;
 	float crossWidth = 0.005;
@@ -49,13 +50,13 @@ void main() {
 	}
 	
 	//adding the cross
-	if((c_re < cRe + crossSize && c_re > cRe - crossSize && c_im < cIm + crossWidth && c_im > cIm - crossWidth)
-		|| (c_im < cIm + crossSize && c_im > cIm - crossSize && c_re < cRe + crossWidth && c_re > cRe - crossWidth)){
+	if((c_re < cRe + crossSize && c_re > cRe - crossSize && c_im < invertedIm + crossWidth && c_im > invertedIm - crossWidth)
+		|| (c_im < invertedIm + crossSize && c_im > invertedIm - crossSize && c_re < cRe + crossWidth && c_re > cRe - crossWidth)){
 		gl_FragColor = vec4(1.0,1.0,1.0,1.0);
 		return;
 	} //Adding borders to cross
-	else if((c_re < cRe + crossSize + crossWidth && c_re > cRe - crossSize - crossWidth && c_im < cIm + crossWidthBlack && c_im > cIm - crossWidthBlack)
-		|| (c_im < cIm + crossSize  + crossWidth && c_im > cIm - crossSize - crossWidth && c_re < cRe + crossWidthBlack && c_re > cRe - crossWidthBlack)){
+	else if((c_re < cRe + crossSize + crossWidth && c_re > cRe - crossSize - crossWidth && c_im < invertedIm + crossWidthBlack && c_im > invertedIm - crossWidthBlack)
+		|| (c_im < invertedIm + crossSize  + crossWidth && c_im > invertedIm - crossSize - crossWidth && c_re < cRe + crossWidthBlack && c_re > cRe - crossWidthBlack)){
 		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 		return;
 	}

@@ -370,7 +370,7 @@ namespace octet {
 					&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
 				{
 					switch (listGameObjects[i].getBonusType()) {
-					case 1: speedIm += -speed;
+					case 1: speedIm += speed;
 						    
 						    listGameObjects[i].getNode()->translate(vec3(0.0f,0.0f,-5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
@@ -381,7 +381,7 @@ namespace octet {
 							}
 							
 						break;
-					case 2: speedIm += speed;
+					case 2: speedIm -= speed;
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
 							{
@@ -631,7 +631,7 @@ namespace octet {
 		// write some text to the overlay
 
 		std::stringstream text;
-		text << "Real Value : " << std::to_string(cRe).substr(0, 7) << "\nImaginary Value : " << std::to_string(cIm).substr(0, 7);
+		text << "Real Value : " << std::to_string(cRe).substr(0, 7) << "\nImaginary Value : " << std::to_string(cIm).substr(0, 7) << "\nZoom Value : " << std::to_string(backgroundZoom).substr(0, 7);
 
 		myInfoText->format(text.str().c_str());
 
