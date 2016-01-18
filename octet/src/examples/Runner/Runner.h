@@ -350,16 +350,29 @@ namespace octet {
 				{
 					switch (listGameObjects[i].getBonusType()) {
 					case 1: speedIm += -speed;
-						    listGameObjects[i].getNode()->translate(vec3(0.0f,2.0f,-5.0f));
+						    listGameObjects[i].getNode()->translate(vec3(0.0f,0.0f,-5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							
+						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							
 						break;
 					case 2: speedIm += speed;
-						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f,-5.0f));
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 						break;
 					case 3: speedRe += speed;
-						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, -5.0f));
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 						break;
 					case 4: speedRe += -speed;
-						    listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, -5.0f));
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
 						break;
 					case 5: 
 						    /*cRe = 0.0f;
