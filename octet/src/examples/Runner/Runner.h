@@ -348,6 +348,11 @@ namespace octet {
 				divisor_change -= 1;
 			}
 
+			if (is_key_down(key_space) )
+			{
+				backgroundZoom=0.2f;
+			}
+
 		}
 
 
