@@ -94,6 +94,7 @@ namespace octet {
 	int roadWidth;
 	int playerSize;
 	int backgroundDistance;
+	int index;
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
@@ -106,6 +107,7 @@ namespace octet {
 	int speed_type;
 	float speedIm;
 	float speedRe;
+	float maxspeed;
 	struct my_vertex {
 		vec3p pos;
 	};
@@ -144,6 +146,7 @@ namespace octet {
 	  playerSize = 1;
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
+	  index = 0;
 	  
 
 	  backgroundZoom = 0.2f;
@@ -151,7 +154,7 @@ namespace octet {
 	  backgroundMoveY = 0.0f;
 	  //cRe = -0.559f;
 	  //cIm = 0.663f;
-	  cRe = -0.0f;
+	  cRe = 0.0f;
 	  cIm = 0.0f;
 	  divisor_change = 150;
 	  divisor_last_change = clock();
@@ -159,6 +162,7 @@ namespace octet {
 	  speed_type = 1;
 	  speedIm = 0.0f;
 	  speedRe = 0.0f;
+	  maxspeed = 0.005f;
 	  
 
 
@@ -370,43 +374,66 @@ namespace octet {
 					&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
 				{
 					switch (listGameObjects[i].getBonusType()) {
-					case 1: speedIm += speed;
-						    
-						    listGameObjects[i].getNode()->translate(vec3(0.0f,0.0f,-5.0f));
-							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
-							{   
-								remove_current_bonus();
-								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
-								
-							}
+					case 1: if (speedIm < maxspeed)
+					{
+						speedIm += speed;
+
+
+						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+
+						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						{
+							remove_current_bonus();
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+
+						}
+					}
+							else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
 							
 						break;
-					case 2: speedIm -= speed;
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
-							{
-								remove_current_bonus();
-								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+					case 2: if (-speedIm < maxspeed)
+					{
+						speedIm -= speed;
 
-							}
+						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						{
+							remove_current_bonus();
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+
+						}
+					}
+						else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
+
 						break;
-					case 3: speedRe += speed;
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
-							{
-								remove_current_bonus();
-								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+					case 3: if (speedRe < maxspeed)
+					{
+						speedRe += speed;
 
-							}
+						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						{
+							remove_current_bonus();
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+
+						}
+					}
+					else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
 						break;
-					case 4: speedRe += -speed;
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
-							{
-								remove_current_bonus();
-								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+					case 4: if (-speedRe < maxspeed)
+					{
+						speedRe -= speed;
 
-							}
+						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						{
+							remove_current_bonus();
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+
+						}
+					}
+					else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
+
 						break;
 					case 5: 
 						    /*cRe = 0.0f;
@@ -421,6 +448,9 @@ namespace octet {
 				
 			}
 		}
+
+	
+
 
 		
 		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
@@ -665,52 +695,65 @@ namespace octet {
 
 	  deleteObstacles();
 
-	  int index = rand() % 5;
+	  /*int index = rand() % 5;*/
+	  
 
-	  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
-	  {
-		  mesh* myMesh = nullptr;
-		  material* myMaterial = nullptr;
+	  
+		  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
+		  {
+			  mesh* myMesh = nullptr;
+			  material* myMaterial = nullptr;
 
 
-		  if (index == 0) {
-			  myMesh = new mesh_sphere(vec3(0), 1);
-			  myMaterial = new material(vec4(0, 1, 0, 1));
-		  }
-		  else if(index==1) {
-			  myMesh = new mesh_sphere(vec3(0), 1);
-			  myMaterial = new material(vec4(0, 0, 1, 1));
-		  }
+			  if (index == 0) {
+				  myMesh = new mesh_sphere(vec3(0), 1);
+				  myMaterial = new material(vec4(0, 1, 0, 1));
+				  
+			  }
+			  else if (index == 1) {
+				  myMesh = new mesh_sphere(vec3(0), 1);
+				  myMaterial = new material(vec4(0, 0, 1, 1));
+				 
+			  }
 
-		  else if(index==2) {
-			  myMesh = new mesh_box(vec3(1.0f));
-			  myMaterial = new material(vec4(0, 1, 0, 1));
-		  }
+			  else if (index == 2) {
+				  myMesh = new mesh_box(vec3(1.0f));
+				  myMaterial = new material(vec4(0, 1, 0, 1));
+				  
+			  }
 
-		  else if(index==3) {
-			  myMesh = new mesh_box(vec3(1.0f));
-			  myMaterial = new material(vec4(0, 0, 1, 1));
-		  }
+			  else if (index == 3) {
+				  myMesh = new mesh_box(vec3(1.0f));
+				  myMaterial = new material(vec4(0, 0, 1, 1));
+				  
+			  }
 
-	     else {
-		  myMesh = new mesh_sphere(vec3(0), 1);
-		  myMaterial = new material(vec4(1, 1, 1, 1));
-	  }
+			  else {
+				  myMesh = new mesh_sphere(vec3(0), 1);
+				  myMaterial = new material(vec4(1, 1, 1, 1));
+				 
+			  }
 
-		  createObstacle(obstacleDrawDistance, myMesh, myMaterial, index + 1);
+			  createObstacle(obstacleDrawDistance, myMesh, myMaterial, index + 1);
 			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 
+			  if (index >= 4)
+			  {
+				  index = 0;
+			  }
+			  else { index++; }
 
-		  
-	  }
+		  }
 
-	 
 
+	  
 	 
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
 	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
 
+	  std::cout << "Current Im speed: " << speedIm << "\n";
+	  std::cout << "Current Re speed: " << speedRe << "\n";
 
 
       // draw the scene
