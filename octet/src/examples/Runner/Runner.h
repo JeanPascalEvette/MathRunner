@@ -42,7 +42,7 @@ namespace octet {
 	class Background {
 	public:
 		Background() {}
-		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY, ref<param_uniform> ChangeDiv, ref<param_uniform> CRe, ref<param_uniform> CIm)
+		Background(ref<scene_node> node, ref<material> mat, ref<param_uniform> zoom, ref<param_uniform> moveX, ref<param_uniform> moveY, ref<param_uniform> ChangeDiv, ref<param_uniform> CRe, ref<param_uniform> CIm, ref<param_uniform> divRGB)
 		{
 			_node = node;
 			_mat = mat;
@@ -52,8 +52,10 @@ namespace octet {
 			_ChangeDiv = ChangeDiv;
 			_CRe = CRe;
 			_CIm = CIm;
+			_divRGB = divRGB;
 		}
 
+		ref<param_uniform> divRGB() { return _divRGB; }
 		ref<param_uniform> moveX() { return _moveX; }
 		ref<param_uniform> moveY() { return _moveY; }
 		ref<param_uniform> ChangeDiv() { return _ChangeDiv; }
@@ -70,6 +72,7 @@ namespace octet {
 		ref<param_uniform> _ChangeDiv;
 		ref<param_uniform> _CRe;
 		ref<param_uniform> _CIm;
+		ref<param_uniform> _divRGB;
 		ref<scene_node> _node;
 	};
     // scene for drawing box
@@ -98,6 +101,7 @@ namespace octet {
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
+	vec4 divRGB;
 	float cRe;
 	float cIm;
 	time_t divisor_last_change;
@@ -107,7 +111,10 @@ namespace octet {
 	int speed_type;
 	float speedIm;
 	float speedRe;
+	float speedIncrease;
 	float maxspeed;
+	int currentDivRGB;
+	std::vector<vec4> divRGBList;
 	struct my_vertex {
 		vec3p pos;
 	};
@@ -147,7 +154,11 @@ namespace octet {
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
 	  index = 0;
-	  
+	  currentDivRGB = 0;
+	  divRGBList = std::vector<vec4>();
+	  divRGBList.push_back(vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f));
+	  divRGBList.push_back(vec4(2.0f, 2.0f, 2.0f, 2.0f));
+	  divRGB = divRGBList[currentDivRGB];
 
 	  backgroundZoom = 0.2f;
 	  backgroundMoveX = 0.0f;
@@ -163,7 +174,7 @@ namespace octet {
 	  speedIm = 0.0f;
 	  speedRe = 0.0f;
 	  maxspeed = 0.005f;
-	  
+	  speedIncrease = 0.0001f;
 
 
 	  material *red = new material(vec4(1, 0, 0, 1));
@@ -360,8 +371,11 @@ namespace octet {
 			return;
 
 
+		if (is_key_going_down(key_f1))
+		{
+			divRGB = divRGBList[++currentDivRGB % divRGBList.size()];
+		}
 		
-		float speed = 0.0001f;
 		
 
 		if (listGameObjects.size()>0)
@@ -376,7 +390,7 @@ namespace octet {
 					switch (listGameObjects[i].getBonusType()) {
 					case 1: if (speedIm < maxspeed)
 					{
-						speedIm += speed;
+						speedIm += speedIncrease;
 
 
 						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
@@ -393,7 +407,7 @@ namespace octet {
 						break;
 					case 2: if (-speedIm < maxspeed)
 					{
-						speedIm -= speed;
+						speedIm -= speedIncrease;
 
 						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
@@ -408,7 +422,7 @@ namespace octet {
 						break;
 					case 3: if (speedRe < maxspeed)
 					{
-						speedRe += speed;
+						speedRe += speedIncrease;
 
 						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
@@ -422,7 +436,7 @@ namespace octet {
 						break;
 					case 4: if (-speedRe < maxspeed)
 					{
-						speedRe -= speed;
+						speedRe -= speedIncrease;
 
 						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
@@ -478,6 +492,8 @@ namespace octet {
 		background.mat()->set_uniform(background.im(), &cIm, sizeof(cIm));
 		background.mat()->set_uniform(background.real(), &cRe, sizeof(cRe));
 		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
+		background.mat()->set_uniform(background.divRGB(), &divRGB, sizeof(divRGB));
+		
 		minimapMaterial->set_uniform(paramMinimapCIm, &cIm, sizeof(cIm));
 		minimapMaterial->set_uniform(paramMinimapCRe, &cRe, sizeof(cRe));
 	}
@@ -511,6 +527,7 @@ namespace octet {
 		param_uniform* paramChange_div = backgroundMaterial->add_uniform(&divisor_change, app_utils::get_atom("divisor"), GL_INT, 1, param::stage_fragment);
 		param_uniform* paramCRe = backgroundMaterial->add_uniform(&cRe, app_utils::get_atom("cRe"), GL_FLOAT, 1, param::stage_fragment);
 		param_uniform* paramCIm = backgroundMaterial->add_uniform(&cIm, app_utils::get_atom("cIm"), GL_FLOAT, 1, param::stage_fragment);
+		param_uniform* paramDivRGB = backgroundMaterial->add_uniform(&divRGB, app_utils::get_atom("divRGB"), GL_FLOAT_VEC4, 1, param::stage_fragment);
 
 
 		mesh *bg = new mesh(); // attach properties, octet stuff
@@ -562,7 +579,7 @@ namespace octet {
 		//Move the hole to the required location, then add it to the list of holes.
 		node->translate(position);
 
-		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div, paramCRe, paramCIm);
+		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div, paramCRe, paramCIm, paramDivRGB);
 
 	}
 
@@ -661,7 +678,8 @@ namespace octet {
 		// write some text to the overlay
 
 		std::stringstream text;
-		text << "Real Value : " << std::to_string(cRe).substr(0, 7) << "\nImaginary Value : " << std::to_string(cIm).substr(0, 7) << "\nZoom Value : " << std::to_string(backgroundZoom).substr(0, 7);
+		float factor = 1.0f / speedIncrease;
+		text << "Real Speed : " << std::to_string(int(speedRe * factor)) << "\nImaginary Value : " << std::to_string(int(speedIm * factor)).substr(0, 7) << "\nZoom Value : " << std::to_string(backgroundZoom).substr(0, 7);
 
 		myInfoText->format(text.str().c_str());
 
