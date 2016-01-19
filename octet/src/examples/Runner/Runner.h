@@ -106,6 +106,7 @@ namespace octet {
 	int speed_type;
 	float speedIm;
 	float speedRe;
+	float maxspeed;
 	struct my_vertex {
 		vec3p pos;
 	};
@@ -151,7 +152,7 @@ namespace octet {
 	  backgroundMoveY = 0.0f;
 	  //cRe = -0.559f;
 	  //cIm = 0.663f;
-	  cRe = -0.0f;
+	  cRe = 0.0f;
 	  cIm = 0.0f;
 	  divisor_change = 150;
 	  divisor_last_change = clock();
@@ -159,6 +160,7 @@ namespace octet {
 	  speed_type = 1;
 	  speedIm = 0.0f;
 	  speedRe = 0.0f;
+	  maxspeed = 0.005f;
 	  
 
 
@@ -370,9 +372,13 @@ namespace octet {
 					&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
 				{
 					switch (listGameObjects[i].getBonusType()) {
-					case 1: speedIm += speed;
+					case 1: if (speedIm < maxspeed)
+					{
+						speedIm += speed;
+					}
 						    
 						    listGameObjects[i].getNode()->translate(vec3(0.0f,0.0f,-5.0f));
+
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
 							{   
 								remove_current_bonus();
@@ -381,7 +387,10 @@ namespace octet {
 							}
 							
 						break;
-					case 2: speedIm -= speed;
+					case 2: if (speedIm < maxspeed)
+					{
+						speedIm -= speed;
+					}
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
 							{
@@ -390,7 +399,10 @@ namespace octet {
 
 							}
 						break;
-					case 3: speedRe += speed;
+					case 3: if (speedRe < maxspeed)
+					{
+						speedRe += speed;
+					}
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
 							{
@@ -399,7 +411,10 @@ namespace octet {
 
 							}
 						break;
-					case 4: speedRe += -speed;
+					case 4: if (speedRe < maxspeed)
+					{
+						speedRe -= speed;
+					}
 							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
 							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
 							{
@@ -710,6 +725,8 @@ namespace octet {
 
 	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
 	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
+
+	  std::cout << "Current Im speed: " << speedIm << "\n";
 
 
 
