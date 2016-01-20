@@ -350,7 +350,7 @@ namespace octet {
 
 			if (is_key_down(key_space) )
 			{
-				backgroundZoom=0.2f;
+				backgroundZoom=0.5f;
 			}
 
 		}
@@ -697,7 +697,7 @@ namespace octet {
 	  cIm += speedIm;
 	  cRe += speedRe;
 
-	  backgroundZoom += 0.0005f;
+	  backgroundZoom += 0.00025f;
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
