@@ -454,7 +454,14 @@ namespace octet {
 			}
 		}
 
-	
+		if (cRe>0.50f||cRe<-1.7f||abs(cIm)>1.1f) 
+		{
+			speedIm = 0.0f;
+			speedRe = 0.0f;
+
+			cRe = 0.0f;
+			cIm = 0.0f;
+		}
 
 
 		
