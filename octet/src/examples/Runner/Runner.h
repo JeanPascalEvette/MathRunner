@@ -348,6 +348,11 @@ namespace octet {
 				divisor_change -= 1;
 			}
 
+			if (is_key_down(key_space) )
+			{
+				backgroundZoom=0.5f;
+			}
+
 		}
 
 
@@ -449,7 +454,14 @@ namespace octet {
 			}
 		}
 
-	
+		if (cRe>0.50f||cRe<-1.7f||abs(cIm)>1.1f) 
+		{
+			speedIm = 0.0f;
+			speedRe = 0.0f;
+
+			cRe = 0.0f;
+			cIm = 0.0f;
+		}
 
 
 		
@@ -685,7 +697,7 @@ namespace octet {
 	  cIm += speedIm;
 	  cRe += speedRe;
 
-	  backgroundZoom += 0.0005f;
+	  backgroundZoom += 0.00025f;
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
