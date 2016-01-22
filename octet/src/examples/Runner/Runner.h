@@ -133,7 +133,7 @@ namespace octet {
 
 	  //Init text
 
-	  aabb bb(vec3(144.5f, 305.0f, 0.0f), vec3(256, 64, 0));
+	  aabb bb(vec3(64.5f, 305.0f, 0.0f), vec3(256, 64, 0));
 	  myText = new text_overlay();
 	  myInfoText = new mesh_text(myText->get_default_font(), "", &bb);
 	  myText->add_mesh_text(myInfoText);
@@ -679,7 +679,7 @@ namespace octet {
 
 		std::stringstream text;
 		float factor = 1.0f / speedIncrease;
-		text << "Real Speed : " << std::to_string(int(speedRe * factor)) << "\nImaginary Value : " << std::to_string(int(speedIm * factor)).substr(0, 7) << "\nZoom Value : " << std::to_string(backgroundZoom).substr(0, 7);
+		text << "Real Speed : " << std::to_string(int(speedRe * factor))  << " Real Value : " << std::to_string(cRe) << "\nImaginary Speed : " << std::to_string(int(speedIm * factor)).substr(0, 7) << " Imaginary Value : " << std::to_string(cIm).substr(0, 7) << "\nZoom Value : " << std::to_string(backgroundZoom).substr(0, 7);
 
 		myInfoText->format(text.str().c_str());
 
