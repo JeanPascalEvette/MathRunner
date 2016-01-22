@@ -699,7 +699,10 @@ namespace octet {
 	  cIm += speedIm;
 	  cRe += speedRe;
 
-	  backgroundZoom += 0.00035f;
+	  if (backgroundZoom < 8.0f)
+	  {
+		  backgroundZoom += 0.00035f;
+	  }
 	  
       // update matrices. assume 30 fps.
       app_scene->update(1.0f/30);
