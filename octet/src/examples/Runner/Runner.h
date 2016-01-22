@@ -157,7 +157,11 @@ namespace octet {
 	  currentDivRGB = 0;
 	  divRGBList = std::vector<vec4>();
 	  divRGBList.push_back(vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f));
-	  divRGBList.push_back(vec4(2.0f, 2.0f, 2.0f, 2.0f));
+	  divRGBList.push_back(vec4(1.0 / 3.0, 2.0 / 3.0, 1.0, 3.0));
+	  divRGBList.push_back(vec4(1.0 / 2.0, 1.0 / 3.0, 1.0, 3.0));
+	  divRGBList.push_back(vec4(1.0 / 3.0, 1.0 / 3.0, 1.0, 3.0));
+	  divRGBList.push_back(vec4(1.0 / 2.0, 2.0 / 1.0, 1.0, 3.0));
+	  divRGBList.push_back(vec4(1.0 / 2.0, 2.0 / 1.0, 1.0, 1.0));
 	  divRGB = divRGBList[currentDivRGB];
 
 	  backgroundZoom = 0.2f;
