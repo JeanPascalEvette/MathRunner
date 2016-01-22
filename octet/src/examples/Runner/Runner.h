@@ -77,7 +77,7 @@ namespace octet {
     ref<visual_scene> app_scene;
 	Background background;
 	bool freeCamera;
-	bool isBackgroundAuto;
+	bool isDebug;
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
 	std::vector<std::pair<vec3, time_t>> path;
@@ -134,7 +134,7 @@ namespace octet {
 	  julia_shader_.init();
 
 	  freeCamera = false;
-	  isBackgroundAuto = false;
+	  isDebug = false;
       app_scene =  new visual_scene();
       app_scene->create_default_camera_and_lights();
 	  app_scene->get_camera_instance(0)->set_far_plane(1000.0f);
@@ -264,46 +264,13 @@ namespace octet {
 		player.getNode()->translate(vec3(0, 0, -5.0f)); // to move the obstacles!
 
 		float movement = 0.0f;
-		if (is_key_down(key_left))
+		if (is_key_down(key_left) && !is_key_down(key_shift))
 			movement -= 0.5f;
-		if (is_key_down(key_right))
+		if (is_key_down(key_right) && !is_key_down(key_shift))
 			movement += 0.5f;
 
 		
-		if (isBackgroundAuto && path.size() > 1)
-		{
-
-			/*
-			time_t currentTime = clock();
-			time_t cumul = 0;
-			for (int i = 0; i < path.size(); i++)
-			{
-				cumul += path[i].second;
-				if (currentTime < cumul)
-				{
-					//The factor calculates how much of the current path has already been traveled
-					float factor = (float(currentTime - (cumul - path[i].second)) / float(path[i].second));
-
-					//Then the factor is applied to each property
-					backgroundMoveX = (path[i - 1].first.x() + (path[i].first.x() - path[i - 1].first.x()) * factor);
-					backgroundMoveY = (path[i - 1].first.y() + (path[i].first.y() - path[i - 1].first.y()) * factor);
-					backgroundZoom  = (path[i - 1].first.z() + (path[i].first.z() - path[i - 1].first.z()) * factor);
-					break;
-				}
-			}
-
-			float posX = player.getNode()->get_position().x();
-			if (clock() > divisor_last_change + divisor_change_step_time &&
-				(player.getNode()->get_position().x() > 0 && divisor_change <= max_divisor ||
-				player.getNode()->get_position().x() < 0 && divisor_change > 1))
-			{
-				divisor_change += player.getNode()->get_position().x();
-				if (divisor_change < 1) divisor_change = 1;
-				divisor_last_change = clock();
-			}
-			*/
-		}
-		else // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
+		if (isDebug) // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
 		{
 			float moveSpeed = 0.0005f;
 			if (is_key_down(65))
@@ -316,18 +283,9 @@ namespace octet {
 				cIm += moveSpeed;
 
 
-			/* This code was used when implementing the mandlebrot set.
-			Not used currently for Julia set
-			float moveSpeed = 0.1f / backgroundZoom;
+			// This code was used when implementing the mandlebrot set.
+			//Not used currently for Julia set
 			float zoomSpeed = 0.5f * backgroundZoom / 3;
-			if (is_key_down(65))
-				backgroundMoveX -= moveSpeed;
-			if (is_key_down(68))
-				backgroundMoveX += moveSpeed;
-			if (is_key_down(87))
-				backgroundMoveY -= moveSpeed;
-			if (is_key_down(83))
-				backgroundMoveY += moveSpeed;
 			if (is_key_down(81) && backgroundZoom > 1.0f)
 			{
 				backgroundZoom -= (zoomSpeed);
@@ -336,25 +294,34 @@ namespace octet {
 			{
 				backgroundZoom += (zoomSpeed);
 			}
-			*/
-			//Code added to change color palette of Mandelbrot
-			if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
-			{
-				divisor_change += 1;
-			}
-
-			if (is_key_down(key_backspace) && divisor_change > 1)
-			{
-				divisor_change -= 1;
-			}
-
-			if (is_key_down(key_space)&&(backgroundZoom>0.231f) )
-			{
-				backgroundZoom-=0.03f;
-			}
+			
 
 		}
 
+		float moveSpeedNew = 0.1f / backgroundZoom;
+		if (is_key_down(key_left) && is_key_down(key_shift))
+			backgroundMoveX -= moveSpeedNew;
+		if (is_key_down(key_right) && is_key_down(key_shift))
+			backgroundMoveX += moveSpeedNew;
+		if (is_key_down(key_down) && is_key_down(key_shift))
+			backgroundMoveY += moveSpeedNew;
+		if (is_key_down(key_up) && is_key_down(key_shift))
+			backgroundMoveY -= moveSpeedNew;
+		//Code added to change color palette of Mandelbrot
+		if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
+		{
+			divisor_change += 1;
+		}
+
+		if (is_key_down(key_backspace) && divisor_change > 1)
+		{
+			divisor_change -= 1;
+		}
+
+		if (is_key_down(key_space) && (backgroundZoom>0.231f))
+		{
+			backgroundZoom -= 0.03f;
+		}
 
 		float newX = abs(player.getNode()->get_position().x() + movement);
 		if (newX < roadWidth - playerSize)
