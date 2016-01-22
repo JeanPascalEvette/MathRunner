@@ -461,6 +461,8 @@ namespace octet {
 
 			cRe = 0.0f;
 			cIm = 0.0f;
+
+			backgroundZoom = 0.2f;
 		}
 
 
