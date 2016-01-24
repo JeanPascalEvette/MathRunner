@@ -127,10 +127,12 @@ namespace octet {
     /// this is called when we construct the class before everything is initialised.
     Runner(int argc, char **argv) : app(argc, argv) {
     }
+
 	// x = right
 	// y = Up
 	// -z = straight
     /// this is called once OpenGL is initialized
+
     void app_init() {
 
 	  srand(static_cast<unsigned int>(time(0)));
@@ -363,7 +365,7 @@ namespace octet {
 		for (int i = 0; i < listGameObjects.size(); ++i)
 		{
 			//If Player is at < than 1.5f from the pickup in the X and Z direction.
-			//Z direction is much higher because we want the player to be able to "keep" pickups by holding them above the character.
+			//Y direction is much higher because we want the player to be able to "keep" pickups by holding them above the character.
 			if ((abs((player.getNode()->get_position().x()) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
 				&& ((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f))
 				&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
