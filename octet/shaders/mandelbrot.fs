@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// default frament shader for solid colours
+// fragment shader to generate the mandelbrot set
 //
 
 // inputs
@@ -11,6 +11,7 @@ uniform float height;
 uniform float cRe;
 uniform float cIm;
 		
+//Utility function to convert color from the HSV format to the RGB format
 vec3 hsv2rgb(vec3 c)
 {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -18,10 +19,9 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-//vec3 myRgbVec =  hsv2rgb(myHSVVec); this is to pass the value to the HSV to RGB function
 
 void main() { 
-	float invertedIm = -cIm;
+	float invertedIm = -cIm; //Inverting the Imaginary number else the set is rendered upside down
 	int divisor = 200;
 	float crossSize = 0.05;
 	float crossWidth = 0.005;
@@ -42,25 +42,27 @@ void main() {
 	float c_im = (MaxIm - y*Im_factor + 0.2*zoom) * (1.0/zoom);
 	float c_re = (MinRe + x*Re_factor - 0.5*zoom) * (1.0/zoom);
 
-	//Creating borders around minimap
+
+	//Creating black borders around minimap
 	if(MinRe + x*Re_factor > 1.72 || MinRe + x*Re_factor < -1.97 || MaxIm - y*Im_factor > 1.48 || MaxIm - y*Im_factor < -2.22)
 	{
 		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 		return;
 	}
 	
-	//adding the cross
+	//adding the white cross
 	if((c_re < cRe + crossSize && c_re > cRe - crossSize && c_im < invertedIm + crossWidth && c_im > invertedIm - crossWidth)
 		|| (c_im < invertedIm + crossSize && c_im > invertedIm - crossSize && c_re < cRe + crossWidth && c_re > cRe - crossWidth)){
 		gl_FragColor = vec4(1.0,1.0,1.0,1.0);
 		return;
-	} //Adding borders to cross
+	} //Adding black borders to cross
 	else if((c_re < cRe + crossSize + crossWidth && c_re > cRe - crossSize - crossWidth && c_im < invertedIm + crossWidthBlack && c_im > invertedIm - crossWidthBlack)
 		|| (c_im < invertedIm + crossSize  + crossWidth && c_im > invertedIm - crossSize - crossWidth && c_re < cRe + crossWidthBlack && c_re > cRe - crossWidthBlack)){
 		gl_FragColor = vec4(0.0,0.0,0.0,1.0);
 		return;
 	}
 
+	//Generating the set
 	float Z_re = c_re, Z_im = c_im;
 	bool isInside = true;
 	int n;
@@ -78,23 +80,11 @@ void main() {
 
 	if(n < MaxIterations) 
 	{ 
-    //color = HSVtoRGB(ColorHSV(i % 256, 255, 255 * (i < MaxIterations)));
-	
-	vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
-
-	//Alternative Palette
-	//vec3 myHSVVec = vec3((float(n)/float(MaxIterations))*(float(divisor)), 0.99, 0.99);
-
-	vec3 myRgbVec =  hsv2rgb(myHSVVec);
-
-	gl_FragColor = vec4(myRgbVec, 1.0);
-
-	//gl_FragColor = vec4(float(n)/float(MaxIterations),float(n)/float(MaxIterations),float(n)/float(MaxIterations), 1.0);
-	
-
+		vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
+		vec3 myRgbVec =  hsv2rgb(myHSVVec);
+		gl_FragColor = vec4(myRgbVec, 1.0);
 	}
 	else
-
 	{ 
 		gl_FragColor = vec4(0.0,0.0,0.0, 1.0);
 	}
