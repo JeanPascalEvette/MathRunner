@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// default frament shader for solid colours
+// fragment shader to generate the Julia sets
 //
 
 // inputs
@@ -15,8 +15,10 @@ uniform float cRe;
 uniform float cIm;
 uniform int divisor;
 		
+//This uniform is used to choose the set of color displayed.
 uniform vec4 divRGB;
 
+//Utility function to convert color from the HSV format to the RGB format
 vec3 hsv2rgb(vec3 c)
 {
     vec4 K = vec4(divRGB);
@@ -24,7 +26,6 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-//vec3 myRgbVec =  hsv2rgb(myHSVVec); this is to pass the value to the HSV to RGB function
 
 void main() { 
 	int MaxIterations = 300;
@@ -53,21 +54,15 @@ void main() {
         if((newRe * newRe + newIm * newIm) > 4.0) break;
     }
        
-
 	if(n < MaxIterations) 
 	{ 
-	vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
-
-	vec3 myRgbVec =  hsv2rgb(myHSVVec);
-
-	gl_FragColor = vec4(myRgbVec, 1.0);
-
+		vec3 myHSVVec = vec3(float(float(n)/float(divisor)), 0.99, 0.99);
+		vec3 myRgbVec =  hsv2rgb(myHSVVec);
+		gl_FragColor = vec4(myRgbVec, 1.0);
 	}
 	else
 	{ 
 		gl_FragColor = vec4(0.0,0.0,0.0, 1.0);
 	}
-	
-
 }
 	

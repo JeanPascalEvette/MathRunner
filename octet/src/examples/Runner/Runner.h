@@ -5,7 +5,7 @@
 // Modular Framework for OpenGLES2 rendering on multiple platforms.
 //
 
-#include "Julia.h"
+
 #include <sstream>
 namespace octet {
   /// Scene containing a box with octet.
@@ -13,8 +13,10 @@ namespace octet {
 
   class Runner : public app {
 
-    Julia_shader julia_shader_;
 
+
+
+	// Container class to store the different elements of an entity in octet
 	class GameObject {
 	public:
 		GameObject() {}
@@ -39,6 +41,8 @@ namespace octet {
 		ref<mesh_instance> _meshInstance;
 	};
 
+
+	//Container class used to store the different param_uniform that can be use to modify the properties of the background shader
 	class Background {
 	public:
 		Background() {}
@@ -83,7 +87,6 @@ namespace octet {
 	bool isDebug;
 	GameObject player;
 	std::vector<GameObject> listGameObjects;
-	std::vector<std::pair<vec3, time_t>> path;
 	ref<param_uniform> paramMinimapCRe;
 	ref<param_uniform> paramMinimapCIm;
 	ref<scene_node> minimapNode;
@@ -97,7 +100,7 @@ namespace octet {
 	int roadWidth;
 	int playerSize;
 	int backgroundDistance;
-	int index;
+	int currentPickupType;
 	float backgroundZoom;
 	float backgroundMoveX;
 	float backgroundMoveY;
@@ -107,6 +110,7 @@ namespace octet {
 	time_t divisor_last_change;
 	time_t divisor_change_step_time;
 	int divisor_change;
+	int max_divisor;
 	int lastDist;
 	int speed_type;
 	float speedIm;
@@ -138,9 +142,11 @@ namespace octet {
 	  myInfoText = new mesh_text(myText->get_default_font(), "", &bb);
 	  myText->add_mesh_text(myInfoText);
 
-	  julia_shader_.init();
 
+	  //Debug only - if TRUE, lets the user move the camera with the mouse
 	  freeCamera = false;
+
+	  //Debug only - if TRUE, lets the user use the Zoom In/Out hotkeys and move through the Mandelbrot through the WASD keys
 	  isDebug = false;
       app_scene =  new visual_scene();
       app_scene->create_default_camera_and_lights();
@@ -153,8 +159,11 @@ namespace octet {
 	  playerSize = 1;
 	  lastDist = obstacleDrawDistance;
 	  listGameObjects = std::vector<GameObject>();
-	  index = 0;
+	  currentPickupType = 0;
 	  currentDivRGB = 0;
+	  max_divisor = 500;
+
+	  //Generate list of color sets
 	  divRGBList = std::vector<vec4>();
 	  divRGBList.push_back(vec4(1.0f, 2.0f / 3.0f, 1.0f / 3.0f, 3.0f));
 	  divRGBList.push_back(vec4(1.0 / 3.0, 2.0 / 3.0, 1.0, 3.0));
@@ -164,13 +173,16 @@ namespace octet {
 	  divRGBList.push_back(vec4(1.0 / 2.0, 2.0 / 1.0, 1.0, 1.0));
 	  divRGB = divRGBList[currentDivRGB];
 
+	  //Initial position in Julia Set
 	  backgroundZoom = 0.2f;
 	  backgroundMoveX = 0.0f;
 	  backgroundMoveY = 0.0f;
-	  //cRe = -0.559f;
-	  //cIm = 0.663f;
+
+	  //Initial position in Mandelbrot set
 	  cRe = 0.0f;
 	  cIm = 0.0f;
+
+
 	  divisor_change = 150;
 	  divisor_last_change = clock();
 	  divisor_change_step_time = 100;
@@ -187,49 +199,29 @@ namespace octet {
 
 
 	  mat4t mat;
-	  mat.translate(0, -10, 0);
-	  //listGameObjects.push_back(createGameObject(mat, new mesh_box(vec3(roadWidth, 0.1f, 100000)), red, false, 1.0f));
 
-
-
-	  mat.translate(0, 2, 0);
+	  mat.translate(0, -8, 0);
 	  player = createGameObject(mat, new mesh_box(vec3(playerSize)), purple, true, 10.0f);
 
-	  //mat.translate(0, 0, -backgroundDistance);
-	  //background = createGameObject(mat, new mesh_box(vec3(1000, 1000, 1)), blue, false, 1.0f);
-      int vx = 0, vy = 0;
-	  get_viewport_size(vx, vy);
+	  //Draw Julia & Mandelbrot sets
 	  drawBackground(vec3(0, 0, player.getNode()->get_position().z() - backgroundDistance), 800, 550);
 	  drawMinimap();
-
-	  //Creates the first 9 Obstacles (Why??)
-	  /*for (int i = 0; i * obstacleGap < obstacleDrawDistance; i++)
-	  {
-		  createObstacle((i+1) * obstacleGap, new mesh_sphere(vec3(0), 1), blue);
-	  }*/
-
-	  //This is used to generate a path for the Mandlebrot's camera
-	  //Format : 
-	  // pair( vec3(MoveX, MoveY, Zoom), time (in ms) )
-	  //Can add any number of entries > 1. Please note that the time is cumulative (i.e if the first one is 3000, and the second one 10000 the second one will trigger 13sec after start of run)
-	  path = std::vector<std::pair<vec3, time_t>>(); 
-	  path.push_back(std::pair<vec3, time_t>(vec3(backgroundMoveX, backgroundMoveY, backgroundZoom), 0));
-	  path.push_back(std::pair<vec3, time_t>(vec3(-0.6f, -0.0f, 1.5f), 3000));
-	  path.push_back(std::pair<vec3, time_t>(vec3(-0.7f, -0.15f, 13.75f), 10000));
 
 
     }
 
+	//This function creates a pickup at a set distance from the player
 	void createObstacle(float distanceFromPlayer, mesh *msh, material *mtl, int bonusType)
 	{
 		float xCoord = (rand() % 8) - 4.0f;
 		vec3 relativePos = vec3(xCoord, 0, -distanceFromPlayer);
 		mat4t mat;
-		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Why?
-		mat.translate(relativePos); //Why??
+		mat.translate(0, player.getNode()->get_position().y(),player.getNode()->get_position().z()); //Translate to player position
+		mat.translate(relativePos); //Translate to pickup's position
 		listGameObjects.push_back(createGameObject(mat, msh, mtl, bonusType, true, 99999.0f));
 	}
 
+	//This function creates a new shape in the world based on the parameters, then returns a GameObject object to store the node, rigidbody and mesh instance
 	GameObject createGameObject(mat4t_in mat, mesh *msh, material *mtl, int bonusType, bool is_dynamic = false, float mass = 1)
 	{
 		btRigidBody* rigidBody = NULL;
@@ -238,7 +230,7 @@ namespace octet {
 		return GameObject(node, rigidBody, mi, bonusType);
 	}
 
-
+	//This allow the player to move the camera with the mouse. Debug only. Will not run if the freeCamera boolean is false.
 	void cameraFollowMouse()
 	{
 		float sensitivity = 100.0f / 360.0f;
@@ -259,7 +251,7 @@ namespace octet {
 		camera_to_world.rotateX(angle_y);
 	}
 
-
+	//This function update the camera location based on the location of the player.
 	void updateCamera()
 	{
 		if (freeCamera)
@@ -272,21 +264,29 @@ namespace octet {
 	}
 
 
-	void handleMovement()
+	
+	void handleInputs()
 	{
-		int max_divisor = 500;
 
-		player.getNode()->translate(vec3(0, 0, -5.0f)); // to move the obstacles!
+		//Move the player forward automatically. 
+		player.getNode()->translate(vec3(0, 0, -5.0f));
 
+		//Player movement Left/Right
 		float movement = 0.0f;
 		if (is_key_down(key_left) && !is_key_down(key_shift))
 			movement -= 0.5f;
 		if (is_key_down(key_right) && !is_key_down(key_shift))
 			movement += 0.5f;
+		float newX = abs(player.getNode()->get_position().x() + movement);
+		if (newX < roadWidth - playerSize)
+		{
+			player.getNode()->translate(vec3(movement, 0, 0));
+		}
 
 		
-		if (isDebug) // debug option - if isBackgroundAuto is false then move using WASD and zoom using QE
+		if (isDebug) // debug option - if isDebug is true then move using WASD and zoom using QE
 		{
+			//Move in Mandelbrot set using WASD
 			float moveSpeed = 0.0005f;
 			if (is_key_down(65))
 				cRe -= moveSpeed;
@@ -298,8 +298,8 @@ namespace octet {
 				cIm += moveSpeed;
 
 
-			// This code was used when implementing the mandlebrot set.
-			//Not used currently for Julia set
+			//Zoom In/Out using Q and E keys
+			//Zoom speed is depending on current zoom level
 			float zoomSpeed = 0.5f * backgroundZoom / 3;
 			if (is_key_down(81) && backgroundZoom > 1.0f)
 			{
@@ -311,8 +311,10 @@ namespace octet {
 			}
 			
 
-		}
+		}// Rest of the code will run whether or not debug mode is enabled
 
+
+		//Arrow keys can be used to control the location in the Julia set if the SHIFT key is pressed
 		float moveSpeedNew = 0.1f / backgroundZoom;
 		if (is_key_down(key_left) && is_key_down(key_shift))
 			backgroundMoveX -= moveSpeedNew;
@@ -322,7 +324,9 @@ namespace octet {
 			backgroundMoveY += moveSpeedNew;
 		if (is_key_down(key_up) && is_key_down(key_shift))
 			backgroundMoveY -= moveSpeedNew;
-		//Code added to change color palette of Mandelbrot
+
+
+		//Change the number of colors used ot represent the Julia set using the Backspace and Ctrl keys
 		if (is_key_down(key_ctrl) && divisor_change <= max_divisor)
 		{
 			divisor_change += 1;
@@ -333,113 +337,120 @@ namespace octet {
 			divisor_change -= 1;
 		}
 
+		//Zoom out slowly using the space key
 		if (is_key_down(key_space) && (backgroundZoom>0.231f))
 		{
 			backgroundZoom -= 0.03f;
 		}
 
-		float newX = abs(player.getNode()->get_position().x() + movement);
-		if (newX < roadWidth - playerSize)
-		{
-			player.getNode()->translate(vec3(movement, 0, 0));
-		}
+
+
 		if (background.node() == nullptr)
 			return;
 
 
+		//If F1 is pressed - iterate through the list of color sets
 		if (is_key_going_down(key_f1))
 		{
 			divRGB = divRGBList[++currentDivRGB % divRGBList.size()];
 		}
-		
-		
+	}
 
-		if (listGameObjects.size()>0)
+
+	//This function goes through every Pickup and applies their effects if the player is in collision with it.
+	void handleCollisions()
+	{
+		for (int i = 0; i < listGameObjects.size(); ++i)
 		{
-			
-			for (int i = 0; i < listGameObjects.size(); ++i)
+			//If Player is at < than 1.5f from the pickup in the X and Z direction.
+			//Z direction is much higher because we want the player to be able to "keep" pickups by holding them above the character.
+			if ((abs((player.getNode()->get_position().x()) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
+				&& ((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f))
+				&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
 			{
-				if ((abs((player.getNode()->get_position().x() + movement) - (listGameObjects[i].getNode()->get_position().x())) < 1.5f)
-					&&((abs((player.getNode()->get_position().z()) - (listGameObjects[i].getNode()->get_position().z())) < 1.5f))
-					&& ((abs((player.getNode()->get_position().y()) - (listGameObjects[i].getNode()->get_position().y())) < 20.0f)))
-				{
-					switch (listGameObjects[i].getBonusType()) {
-					case 1: if (speedIm < maxspeed)
-					{
-						speedIm += speedIncrease;
-
-
-						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-
-						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+				//Depending on the bonus type, apply a different effect on the Imaginary and Real velocities
+				//After applying the effect, also move the bonus above the player's character and make it move at the same velocity as the player in the Z direction
+				//This means that the pickup will stay above the player until the player moves in such a way that the collision doesn't register anymore.
+				//Also, if the player collides with a new pickup, it will replace the current one.
+				switch (listGameObjects[i].getBonusType()) {
+					case 1: 
+						if (speedIm < maxspeed) // If the player already has the max speed - get rid of the pickup
 						{
-							remove_current_bonus();
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
-
+							speedIm += speedIncrease;
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						}
-					}
-							else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
-							
-						break;
-					case 2: if (-speedIm < maxspeed)
-					{
-						speedIm -= speedIncrease;
-
-						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						else 
+						{ 
+							listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); 
+						}
+							break;
+					case 2: 
+						if (-speedIm < maxspeed)
 						{
-							remove_current_bonus();
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
-
+							speedIm -= speedIncrease;
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						}
-					}
-						else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
+						else 
+						{ 
+							listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); 
+						}
 
-						break;
-					case 3: if (speedRe < maxspeed)
-					{
-						speedRe += speedIncrease;
-
-						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							break;
+					case 3: 
+						if (speedRe < maxspeed)
 						{
-							remove_current_bonus();
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
-
+							speedRe += speedIncrease;
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						}
-					}
-					else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
-						break;
-					case 4: if (-speedRe < maxspeed)
-					{
-						speedRe -= speedIncrease;
-
-						listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
-						if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+						else 
+						{ 
+							listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); 
+						}
+							break;
+					case 4: 
+						if (-speedRe < maxspeed)
 						{
-							remove_current_bonus();
-							listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							speedRe -= speedIncrease;
 
+							listGameObjects[i].getNode()->translate(vec3(0.0f, 0.0f, -5.0f));
+							if ((player.getNode()->get_position().y()) == (listGameObjects[i].getNode()->get_position().y()))
+							{
+								remove_current_bonus();
+								listGameObjects[i].getNode()->translate(vec3(0.0f, 2.0f, 0.0f));
+							}
 						}
-					}
-					else { listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); }
-
+						else 
+						{ 
+							listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f)); 
+						}
+							break;
+					case 5:
+						speedRe = 0.0f;
+						speedIm = 0.0f;
+						listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
+						remove_current_bonus();
 						break;
-					case 5: 
-						    /*cRe = 0.0f;
-						    cIm = 0.0f;*/
-						    speedRe = 0.0f;
-						    speedIm = 0.0f;
-						    listGameObjects[i].getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
-							remove_current_bonus();
-						break;
-					}
 				}
-				
 			}
 		}
 
-		if (cRe>0.50f||cRe<-1.7f||abs(cIm)>1.1f) 
+		//If the player has gone outside of the Mandelbrot set, move him back at the initial location, with the initial velocities and zoom
+		if (cRe>0.50f || cRe<-1.7f || abs(cIm)>1.1f)
 		{
 			speedIm = 0.0f;
 			speedRe = 0.0f;
@@ -449,54 +460,22 @@ namespace octet {
 
 			backgroundZoom = 0.2f;
 		}
-
-
-		
-		//to delete the obstacles that pass the player. (doesn't Work!! -Not fast enough?!!)
-		/*for (int i = 0; i < listGameObjects.size(); ++i)
-		{*/
-		//	if ((listGameObjects.size()>0)&&((listGameObjects[0].getNode()->get_position().z()) > (player.getNode()->get_position().z())+3))
-		//	{
-		//		listGameObjects.erase(listGameObjects.begin());//Problem is probably here!!
-		//			
-		//	}
-
-		/*}*/
-		
-		std::cout << "size of GameObject: " << listGameObjects.size()<<"\n";//to check if im deleting or not
-
-		background.node()->translate(-background.node()->get_position());
-		background.node()->translate(vec3(player.getNode()->get_position().x(), player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
-		minimapNode->translate(-minimapNode->get_position());
-		minimapNode->translate(vec3(6.8f + app_scene->get_camera_instance(0)->get_node()->get_position().x(), 3.5f, player.getNode()->get_position().z()));
-		//minimapNode->translate(vec3(1.0f, 2.5f, app_scene->get_camera_instance(0)->get_node()->get_position().z()-10));
-		
-		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
-		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
-		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
-		background.mat()->set_uniform(background.im(), &cIm, sizeof(cIm));
-		background.mat()->set_uniform(background.real(), &cRe, sizeof(cRe));
-		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
-		background.mat()->set_uniform(background.divRGB(), &divRGB, sizeof(divRGB));
-		
-		minimapMaterial->set_uniform(paramMinimapCIm, &cIm, sizeof(cIm));
-		minimapMaterial->set_uniform(paramMinimapCRe, &cRe, sizeof(cRe));
 	}
 
+	//This function iterates through the pickups and removes any it finds above the player.
+	//This is called only when the player collides with a pick up to remove the previous pick up
 	void remove_current_bonus() {
 		if (listGameObjects.size() == 0) return;
 		std::vector<GameObject>::iterator it;
-
 		for (it = listGameObjects.begin(); it != listGameObjects.end(); it++)
 		{
-			
-			
 			if ((*it).getNode()->get_position().y() > -8.0f)
 				it->getNode()->translate(vec3(30.0f, 0.0f, 0.0f));
-
 		}
-
 	}
+
+
+	//This function is called to create the shader for the Julia Set that is displayed in the background of the game
 	void drawBackground(const vec3 &position, const float &width, const float &height)
 	{
 		param_shader *shader = new param_shader("shaders/default.vs", "shaders/julia.fs");
@@ -556,19 +535,21 @@ namespace octet {
 		}
 
 
-		//Add the hole to the app_scene
+		//Add the node to the app_scene
 		scene_node *node = new scene_node();
 		app_scene->add_child(node);
 		app_scene->add_mesh_instance(new mesh_instance(node, bg, backgroundMaterial));
 
-		//Move the hole to the required location, then add it to the list of holes.
+		//Move the node to the required location, then add it to the list of holes.
 		node->translate(position);
 
+		//Store the uniforms in an accessible object
 		background = Background(node, backgroundMaterial, paramZoom, paramMoveX, paramMoveY, paramChange_div, paramCRe, paramCIm, paramDivRGB);
 
 	}
 
 
+	//This function is called to create the shader for the Mandelbrot Set that is displayed in the minimap
 	void drawMinimap()
 	{
 		param_shader *shader = new param_shader("shaders/default.vs", "shaders/mandelbrot.fs");
@@ -624,19 +605,20 @@ namespace octet {
 		}
 
 
-		//Add the hole to the app_scene
+		//Add the node to the app_scene
 		scene_node *node = new scene_node();
 		app_scene->add_child(node);
 		app_scene->add_mesh_instance(new mesh_instance(node, bg, minimapMaterial));
 
-		//Move the hole to the required location, then add it to the list of holes.
+		//Move the node to the required location, then add it to the list of holes.
 		node->translate(vec3(0,0,player.getNode()->get_position().z()));
 
+		//Store the node in a field.
 		minimapNode = node;
 	}
 
 	
-
+	//This function iterates through the pickups and deletes any which is behind the player - keeps the number of active pickups between 4 and 7
 	void deleteObstacles()
 	{
 		if (listGameObjects.size() == 0) return;
@@ -657,6 +639,7 @@ namespace octet {
 		listGameObjects.shrink_to_fit();
 	}
 
+	//This function will update the text display at the top of the screen.
 	void updateText(int vx, int vy)
 	{
 		myInfoText->clear();
@@ -677,7 +660,26 @@ namespace octet {
 		myText->render(vx, vy);
 	}
 
+	//This function updates the data that is sent to the shaders to update the Mandelbrot and Julia sets
+	void updateShaders()
+	{
+		//Update Shaders position
+		background.node()->translate(-background.node()->get_position());
+		background.node()->translate(vec3(player.getNode()->get_position().x(), player.getNode()->get_position().y(), player.getNode()->get_position().z() - backgroundDistance));
+		minimapNode->translate(-minimapNode->get_position());
+		minimapNode->translate(vec3(6.8f + app_scene->get_camera_instance(0)->get_node()->get_position().x(), 3.5f, player.getNode()->get_position().z()));
 
+		//Update Shaders uniforms
+		background.mat()->set_uniform(background.zoom(), &backgroundZoom, sizeof(backgroundZoom));
+		background.mat()->set_uniform(background.moveX(), &backgroundMoveX, sizeof(backgroundMoveX));
+		background.mat()->set_uniform(background.moveY(), &backgroundMoveY, sizeof(backgroundMoveY));
+		background.mat()->set_uniform(background.im(), &cIm, sizeof(cIm));
+		background.mat()->set_uniform(background.real(), &cRe, sizeof(cRe));
+		background.mat()->set_uniform(background.ChangeDiv(), &divisor_change, sizeof(divisor_change));
+		background.mat()->set_uniform(background.divRGB(), &divRGB, sizeof(divRGB));
+		minimapMaterial->set_uniform(paramMinimapCIm, &cIm, sizeof(cIm));
+		minimapMaterial->set_uniform(paramMinimapCRe, &cRe, sizeof(cRe));
+	}
 
     /// this is called to draw the world
     void draw_world(int x, int y, int w, int h) { 
@@ -697,71 +699,63 @@ namespace octet {
       app_scene->update(1.0f/30);
 	  updateCamera();
 
-	  handleMovement();
+	  handleInputs();
+	  handleCollisions();
+	  updateShaders();
 
 	  deleteObstacles();
 
-	  /*int index = rand() % 5;*/
-	  
-
-	  
-		  if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
-		  {
-			  mesh* myMesh = nullptr;
-			  material* myMaterial = nullptr;
 
 
-			  if (index == 0) {
-				  myMesh = new mesh_sphere(vec3(0), 1);
-				  myMaterial = new material(vec4(0, 1, 0, 1));
+	  //Creates a new pick up if the gap with the previous one is big enough
+		if (-player.getNode()->get_position().z() + obstacleDrawDistance > lastDist + obstacleGap)
+		{
+			mesh* myMesh = nullptr;
+			material* myMaterial = nullptr;
+
+
+			if (currentPickupType == 0) {
+				myMesh = new mesh_sphere(vec3(0), 1);
+				myMaterial = new material(vec4(0, 1, 0, 1));
 				  
-			  }
-			  else if (index == 1) {
-				  myMesh = new mesh_sphere(vec3(0), 1);
-				  myMaterial = new material(vec4(0, 0, 1, 1));
+			}
+			else if (currentPickupType == 1) {
+				myMesh = new mesh_sphere(vec3(0), 1);
+				myMaterial = new material(vec4(0, 0, 1, 1));
 				 
-			  }
+			}
 
-			  else if (index == 2) {
-				  myMesh = new mesh_box(vec3(1.0f));
-				  myMaterial = new material(vec4(0, 1, 0, 1));
+			else if (currentPickupType == 2) {
+				myMesh = new mesh_box(vec3(1.0f));
+				myMaterial = new material(vec4(0, 1, 0, 1));
 				  
-			  }
+			}
 
-			  else if (index == 3) {
-				  myMesh = new mesh_box(vec3(1.0f));
-				  myMaterial = new material(vec4(0, 0, 1, 1));
+			else if (currentPickupType == 3) {
+				myMesh = new mesh_box(vec3(1.0f));
+				myMaterial = new material(vec4(0, 0, 1, 1));
 				  
-			  }
+			}
 
-			  else {
-				  myMesh = new mesh_sphere(vec3(0), 1);
-				  myMaterial = new material(vec4(1, 1, 1, 1));
+			else {
+				myMesh = new mesh_sphere(vec3(0), 1);
+				myMaterial = new material(vec4(1, 1, 1, 1));
 				 
-			  }
+			}
 
-			  createObstacle(obstacleDrawDistance, myMesh, myMaterial, index + 1);
-			  lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
+			createObstacle(obstacleDrawDistance, myMesh, myMaterial, currentPickupType + 1);
+			lastDist = -player.getNode()->get_position().z() + obstacleDrawDistance;
 
-			  if (index >= 4)
-			  {
-				  index = 0;
-			  }
-			  else { index++; }
+			if (currentPickupType >= 4)
+			{
+				currentPickupType = 0;
+			}
+			else { currentPickupType++; }
 
-		  }
+		}
 
 
 	  
-	 
-
-	  //std::cout << "Player Position : ("<< player.getNode()->get_position().x() << "," << player.getNode()->get_position().y() << "," << player.getNode()->get_position().z() << ")\n";
-	  std::cout << "MoveX : " << backgroundMoveX << " MoveY : " << backgroundMoveY << " Zoom : " << backgroundZoom << "\n";
-
-	  std::cout << "Current Im speed: " << speedIm << "\n";
-	  std::cout << "Current Re speed: " << speedRe << "\n";
-
-
       // draw the scene
       app_scene->render((float)vx / vy);
 
